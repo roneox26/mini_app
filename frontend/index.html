@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="OX Mining — Auto-mine OX coins, earn rewards, and boost your earnings." />
+  <title>🐂 OX Mining</title>
+
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ===== LOADER ===== -->
+<div class="loader-overlay" id="loader">
+  <div class="loader-logo">🐂</div>
+  <div class="loader-text">Loading<span class="loader-dots"></span></div>
+</div>
+
+<!-- ===== BACKGROUND ===== -->
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<!-- ===== APP CONTAINER ===== -->
+<div class="app-container">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-logo">
+      <div class="header-logo-icon">🐂</div>
+      <div>
+        <div class="header-logo-text">OX Mining</div>
+        <div class="header-logo-sub">Earn while you sleep</div>
+      </div>
+    </div>
+    <img class="header-avatar" id="user-avatar"
+         src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Ccircle cx='18' cy='18' r='18' fill='%234299e1'/%3E%3Ctext x='18' y='23' text-anchor='middle' font-size='18' fill='white'%3E👤%3C/text%3E%3C/svg%3E"
+          alt="Profile" onclick="showScreen('profile')" />
+  </header>
+
+  <!-- ===== SCREEN: MINE ===== -->
+  <main class="screen active" id="screen-mine">
+
+    <!-- Balance -->
+    <div class="mining-hero">
+      <div class="balance-display">
+        <div class="balance-amount" id="balance-amount" data-value="0">0</div>
+        <div class="balance-label">Total OX</div>
+      </div>
+
+      <!-- Mining Orb -->
+      <div class="mining-orb-wrap" style="margin:24px auto 0;">
+        <div class="mining-orb" id="mining-orb">
+          <div class="mining-orb-icon">🐂</div>
+          <div class="mining-orb-label" id="orb-label">TAP START</div>
+        </div>
+      </div>
+
+      <!-- Rate badge -->
+      <div style="margin-top:16px;">
+        <div class="mining-rate-badge">
+          <span class="dot"></span>
+          <span id="mining-rate-badge">+10 / hour</span>
+        </div>
+      </div>
+
+      <!-- Active Boost -->
+      <div id="boost-badge-wrap" style="margin-top:8px;"></div>
+    </div>
+
+    <!-- Mining Progress -->
+    <div class="glass-card" style="padding:18px;margin-bottom:16px;">
+      <div class="mining-progress-header">
+        <span>Mining Progress</span>
+        <span id="earned-this-session" style="color:var(--green);font-weight:700;">--</span>
+      </div>
+      <div class="mining-progress-wrap">
+        <div class="mining-progress-bar">
+          <div class="mining-progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:6px;" id="progress-time">
+        Start mining to earn coins
+      </div>
+    </div>
+
+    <!-- Mining Buttons -->
+    <button class="btn btn-primary" id="btn-start-mining" onclick="startMining()">
+      🐂 Start Mining
+    </button>
+    <button class="btn btn-gold" id="btn-claim-mining" onclick="claimMining()" style="display:none;margin-top:10px;" disabled>
+      🐂 Claim OX
+    </button>
+
+    <!-- Quick Actions -->
+    <div class="action-grid" style="margin-top:24px;">
+      <div class="action-btn" onclick="watchAd()" id="btn-watch-ad-wrap">
+        <div class="action-btn-icon">🎬</div>
+        <div class="action-btn-label">Watch Ad</div>
+        <div class="action-btn-reward">+100 OX</div>
+      </div>
+      <div class="action-btn" onclick="showScreen('boost')">
+        <div class="action-btn-icon">🚀</div>
+        <div class="action-btn-label">Boost</div>
+        <div class="action-btn-reward">↑Rate</div>
+      </div>
+      <div class="action-btn" onclick="showScreen('referral')">
+        <div class="action-btn-icon">👥</div>
+        <div class="action-btn-label">Friends</div>
+        <div class="action-btn-reward">+500 OX</div>
+      </div>
+      <div class="action-btn" onclick="openDailyModal()">
+        <div class="action-btn-icon">🎁</div>
+        <div class="action-btn-label">Daily</div>
+        <div class="action-btn-reward">+1000 OX</div>
+      </div>
+    </div>
+
+    <!-- Watch Ad Full Button -->
+    <button class="btn btn-outline" id="btn-watch-ad" onclick="watchAd()" style="margin-top:10px;">
+      🎬 Watch Ad +100 OX
+    </button>
+
+  </main>
+
+  <!-- ===== SCREEN: BOOST ===== -->
+  <main class="screen" id="screen-boost">
+    <h1 style="font-size:20px;font-weight:800;margin-bottom:4px;">🚀 Mining Boost</h1>
+    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:20px;">
+      Upgrade your mining rate with Telegram Stars
+    </p>
+
+    <!-- Coin Economy reference -->
+    <div class="glass-card" style="padding:16px;margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:12px;color:var(--text-muted);">Current Rate</div>
+          <div style="font-size:22px;font-weight:800;color:var(--green)" id="boost-current-rate">10 OX/hr</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:12px;color:var(--text-muted);">Max per session</div>
+          <div style="font-size:18px;font-weight:700;color:var(--gold)">800 OX</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">📊 Plans</div>
+    <div class="boost-plans-grid" id="boost-plans-grid">
+      <!-- Injected by JS -->
+    </div>
+
+    <!-- Coin Packages -->
+    <div class="divider"></div>
+    <div class="section-title">💰 Buy Coins</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="glass-card" style="padding:16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="showToast('Open Telegram to purchase','error')">
+        <div>
+          <div style="font-weight:700;">10,000 OX</div>
+          <div style="font-size:12px;color:var(--text-secondary);">Instant credit</div>
+        </div>
+        <div class="btn btn-gold btn-sm" style="width:auto;">⭐ 100</div>
+      </div>
+      <div class="glass-card" style="padding:16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="showToast('Open Telegram to purchase','error')">
+        <div>
+          <div style="font-weight:700;">60,000 OX <span class="badge badge-green">+20%</span></div>
+          <div style="font-size:12px;color:var(--text-secondary);">Best value</div>
+        </div>
+        <div class="btn btn-gold btn-sm" style="width:auto;">⭐ 500</div>
+      </div>
+      <div class="glass-card" style="padding:16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="showToast('Open Telegram to purchase','error')">
+        <div>
+          <div style="font-weight:700;">130,000 OX <span class="badge badge-blue">💎 Max</span></div>
+          <div style="font-size:12px;color:var(--text-secondary);">Best savings</div>
+        </div>
+        <div class="btn btn-gold btn-sm" style="width:auto;">⭐ 1000</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== SCREEN: REFERRAL ===== -->
+  <main class="screen" id="screen-referral">
+    <h1 style="font-size:20px;font-weight:800;margin-bottom:4px;">👥 Invite Friends</h1>
+    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:20px;">
+      Earn up to <span class="text-gold">+500 OX</span> per qualified referral
+    </p>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" id="ref-total">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value text-green" id="ref-qualified">0</div>
+        <div class="stat-label">Qualified</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value text-gold" id="ref-earned">0</div>
+        <div class="stat-label">Earned</div>
+      </div>
+    </div>
+
+    <!-- Referral Link -->
+    <div class="section-title" style="margin-top:20px;">🔗 Your Referral Link</div>
+    <div class="referral-code-box">
+      <div class="referral-link" id="referral-link-text">Loading...</div>
+      <button class="copy-btn" id="copy-ref-btn" onclick="copyReferralLink()">📋 Copy</button>
+    </div>
+    <button class="btn btn-primary" onclick="shareReferralLink()">
+      📤 Share with Friends
+    </button>
+
+    <!-- How it works -->
+    <div class="divider"></div>
+    <div class="section-title">📖 How It Works</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="glass-card" style="padding:14px;">
+        <div style="font-size:13px;color:var(--text-secondary);">1️⃣ Friend joins via your link</div>
+      </div>
+      <div class="glass-card" style="padding:14px;">
+        <div style="font-size:13px;color:var(--text-secondary);">2️⃣ Friend completes first mining → <span class="text-green">+250 OX</span></div>
+      </div>
+      <div class="glass-card" style="padding:14px;">
+        <div style="font-size:13px;color:var(--text-secondary);">3️⃣ Friend stays 24h active → <span class="text-green">+250 OX</span></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== SCREEN: TASKS ===== -->
+  <main class="screen" id="screen-tasks">
+    <h1 style="font-size:20px;font-weight:800;margin-bottom:4px;">📋 Tasks</h1>
+    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:20px;">
+      Complete tasks to earn extra OX
+    </p>
+
+    <!-- Admin: Add Task Button -->
+    <button class="btn btn-primary" id="btn-add-task" onclick="openAddTaskModal()" style="margin-bottom:20px;display:none;">
+      ➕ Add New Task
+    </button>
+
+    <!-- Daily Reward quick access -->
+    <div class="glass-card" style="padding:18px;margin-bottom:20px;cursor:pointer;" onclick="openDailyModal()">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="font-size:32px;">🎁</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:15px;">Daily Reward</div>
+          <div id="daily-streak" style="font-size:12px;color:var(--text-secondary);">🔥 0 day streak</div>
+        </div>
+        <button class="btn btn-green btn-sm" onclick="event.stopPropagation();openDailyModal()">Claim</button>
+      </div>
+    </div>
+
+    <div class="section-title">📋 Available Tasks</div>
+    <div class="task-list" id="task-list">
+      <div class="empty-state">
+        <div class="empty-state-icon">⏳</div>
+        <div class="empty-state-text">Loading tasks...</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== SCREEN: LEADERBOARD ===== -->
+  <main class="screen" id="screen-leaderboard">
+    <h1 style="font-size:20px;font-weight:800;margin-bottom:4px;">🏆 Leaderboard</h1>
+    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:4px;">Top miners globally</p>
+    <div id="my-rank" style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:20px;"></div>
+
+    <div class="leaderboard-list" id="leaderboard-list">
+      <div class="empty-state">
+        <div class="empty-state-icon">⏳</div>
+        <div class="empty-state-text">Loading...</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== SCREEN: PROFILE ===== -->
+  <main class="screen" id="screen-profile">
+    <h1 style="font-size:20px;font-weight:800;margin-bottom:4px;">Profile</h1>
+    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:20px;">Your account overview</p>
+
+    <div class="glass-card profile-card" id="profile-card">
+      <div class="profile-identity">
+        <img class="profile-avatar" id="profile-avatar" alt="Profile" />
+        <div>
+          <div class="profile-name" id="profile-name">Loading...</div>
+          <div class="profile-username" id="profile-username"></div>
+          <div class="profile-id" id="profile-id"></div>
+        </div>
+      </div>
+      <div class="profile-stats">
+        <div><span>Available</span><strong id="profile-available">0</strong></div>
+        <div><span>Pending</span><strong id="profile-pending">0</strong></div>
+        <div><span>Mined</span><strong id="profile-mined">0</strong></div>
+      </div>
+      <div class="profile-plan">
+        <span>Mining rate</span>
+        <strong id="profile-rate">0 / hour</strong>
+      </div>
+    </div>
+
+    <div class="profile-error" id="profile-error" style="display:none;"></div>
+  </main>
+
+  <!-- ===== SCREEN: WITHDRAW ===== -->
+  <main class="screen" id="screen-withdraw">
+    <h1 style="font-size:20px;font-weight:800;margin-bottom:4px;">💸 Withdraw</h1>
+    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:20px;">
+      Minimum <span class="text-gold">1,000,000 OX</span> · 5% fee
+    </p>
+
+    <!-- Balance -->
+    <div class="glass-card" style="padding:16px;margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--text-muted);">Available Balance</div>
+      <div style="font-size:28px;font-weight:800;" id="withdraw-available">0</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+        Minimum: <span id="withdraw-min">1,000,000</span> OX
+      </div>
+    </div>
+
+    <!-- Amount input -->
+    <div class="withdraw-input-wrap">
+      <input class="withdraw-input" type="number" id="withdraw-amount" placeholder="Enter amount" min="1000000" />
+      <span class="withdraw-currency">OX</span>
+    </div>
+
+    <!-- Method -->
+    <div class="section-title">Payment Method</div>
+    <div class="method-grid">
+      <div class="method-btn" data-method="bkash" onclick="selectMethod(this)">bKash</div>
+      <div class="method-btn" data-method="nagad" onclick="selectMethod(this)">Nagad</div>
+      <div class="method-btn" data-method="rocket" onclick="selectMethod(this)">Rocket</div>
+    </div>
+
+    <!-- Destination -->
+    <input class="withdraw-input" type="text" id="withdraw-destination"
+           placeholder="Enter phone / wallet number" style="margin-top:10px;font-size:15px;padding:14px;" />
+
+    <!-- Submit -->
+    <button class="btn btn-primary" onclick="submitWithdrawal()" style="margin-top:16px;">
+      💸 Request Withdrawal
+    </button>
+
+    <div style="margin-top:16px;font-size:12px;color:var(--text-muted);text-align:center;">
+      ⚠️ Crypto withdrawal is currently disabled.
+      Withdrawals are reviewed within 24-48 hours.
+    </div>
+  </main>
+
+  <!-- ===== BOTTOM NAV ===== -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-screen="mine">
+      <span class="nav-icon">⛏️</span>
+      <span class="nav-label">Mine</span>
+    </button>
+    <button class="nav-item" data-screen="boost">
+      <span class="nav-icon">🚀</span>
+      <span class="nav-label">Boost</span>
+    </button>
+    <button class="nav-item" data-screen="referral">
+      <span class="nav-icon">👥</span>
+      <span class="nav-label">Friends</span>
+    </button>
+    <button class="nav-item" data-screen="tasks">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Tasks</span>
+    </button>
+    <button class="nav-item" data-screen="leaderboard">
+      <span class="nav-icon">🏆</span>
+      <span class="nav-label">Top</span>
+    </button>
+    <button class="nav-item" data-screen="withdraw">
+      <span class="nav-icon">💸</span>
+      <span class="nav-label">Withdraw</span>
+    </button>
+  </nav>
+
+</div><!-- /app-container -->
+
+<!-- ===== DAILY MODAL ===== -->
+<div id="daily-modal" style="
+  display:none; position:fixed; inset:0; z-index:500;
+  background:rgba(0,0,0,0.7); backdrop-filter:blur(10px);
+  align-items:flex-end; justify-content:center;
+">
+  <div style="
+    background:var(--bg-secondary); border:1px solid var(--border);
+    border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+    width:100%; max-width:480px; padding:28px 20px;
+    animation: fadeInUp 0.3s ease;
+  ">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:36px;">🎁</div>
+      <div style="font-size:18px;font-weight:800;margin-top:8px;">Daily Reward</div>
+      <div id="daily-streak" style="font-size:13px;color:var(--text-secondary);margin-top:4px;">🔥 0 day streak</div>
+    </div>
+
+    <div class="daily-grid" id="daily-grid"></div>
+
+    <button class="btn btn-gold" id="btn-daily-claim" onclick="claimDailyReward()" style="margin-top:20px;">
+      🎁 Claim Daily Reward
+    </button>
+    <button class="btn btn-outline" onclick="closeDailyModal()" style="margin-top:10px;">
+      Close
+    </button>
+  </div>
+</div>
+
+<!-- ===== ADD TASK MODAL ===== -->
+<div id="add-task-modal" style="
+  display:none; position:fixed; inset:0; z-index:500;
+  background:rgba(0,0,0,0.7); backdrop-filter:blur(10px);
+  align-items:flex-end; justify-content:center;
+">
+  <div style="
+    background:var(--bg-secondary); border:1px solid var(--border);
+    border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+    width:100%; max-width:480px; padding:28px 20px;
+    animation: fadeInUp 0.3s ease;
+    max-height:90vh; overflow-y:auto;
+  ">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:36px;">➕</div>
+      <div style="font-size:18px;font-weight:800;margin-top:8px;">Add New Task</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px;">Task Name (slug)</label>
+        <input type="text" id="task-name" placeholder="e.g. join_discord" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-primary);color:var(--text-primary);font-size:14px;" />
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px;">Display Name</label>
+        <input type="text" id="task-display-name" placeholder="e.g. Join Discord Server" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-primary);color:var(--text-primary);font-size:14px;" />
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px;">Task Type</label>
+        <select id="task-type" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-primary);color:var(--text-primary);font-size:14px;">
+          <option value="JOIN_CHANNEL">Join Channel</option>
+          <option value="JOIN_GROUP">Join Group</option>
+          <option value="FOLLOW">Follow</option>
+          <option value="VISIT_WEBSITE">Visit Website</option>
+          <option value="PLAY_GAME">Play Game</option>
+          <option value="DAILY_LOGIN">Daily Login</option>
+          <option value="INVITE_FRIEND">Invite Friend</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px;">Reward (OX)</label>
+        <input type="number" id="task-reward" placeholder="e.g. 500" min="1" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-primary);color:var(--text-primary);font-size:14px;" />
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px;">Description (optional)</label>
+        <input type="text" id="task-description" placeholder="e.g. Join our official channel" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-primary);color:var(--text-primary);font-size:14px;" />
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px;">Target URL (optional)</label>
+        <input type="text" id="task-url" placeholder="e.g. https://t.me/channel" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-primary);color:var(--text-primary);font-size:14px;" />
+      </div>
+      <div style="display:flex;gap:10px;">
+        <label style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="task-repeatable" />
+          <span style="font-size:13px;">Repeatable</span>
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="task-active" checked />
+          <span style="font-size:13px;">Active</span>
+        </label>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-submit-task" onclick="submitAddTask(this)" style="margin-top:20px;width:100%;">
+      ➕ Create Task
+    </button>
+    <button class="btn btn-outline" onclick="closeAddTaskModal()" style="margin-top:10px;width:100%;">
+      Cancel
+    </button>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- App Script -->
+<script src="js/app.js"></script>
+<script>
+function openDailyModal() {
+  const modal = document.getElementById('daily-modal');
+  modal.style.display = 'flex';
+  loadDailyReward();
+}
+function closeDailyModal() {
+  document.getElementById('daily-modal').style.display = 'none';
+}
+</script>
+
+</body>
+</html>

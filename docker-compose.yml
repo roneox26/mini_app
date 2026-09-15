@@ -1,0 +1,136 @@
+version: "3.9"
+
+services:
+  # ─────────────────────────────────────────────
+  # PostgreSQL
+  # ─────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: mining_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mininguser
+      POSTGRES_PASSWORD: miningpassword
+      POSTGRES_DB: miningdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mininguser -d miningdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # Redis
+  # ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: mining_redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # Flask Backend API
+  # ─────────────────────────────────────────────
+  backend:
+    build: ./backend
+    container_name: mining_backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://mininguser:miningpassword@postgres:5432/miningdb
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: >
+      sh -c "alembic upgrade head && gunicorn --bind 0.0.0.0:5000 --workers 4 --threads 2 --timeout 120 wsgi:app"
+
+  # ─────────────────────────────────────────────
+  # Celery Worker (background tasks)
+  # ─────────────────────────────────────────────
+  worker:
+    build: ./backend
+    container_name: mining_worker
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://mininguser:miningpassword@postgres:5432/miningdb
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - backend
+    volumes:
+      - ./backend:/app
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
+
+  # ─────────────────────────────────────────────
+  # Celery Beat (scheduled task scheduler)
+  # ─────────────────────────────────────────────
+  beat:
+    build: ./backend
+    container_name: mining_beat
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://mininguser:miningpassword@postgres:5432/miningdb
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - worker
+    volumes:
+      - ./backend:/app
+    command: celery -A app.workers.celery_app beat --loglevel=info
+
+  # ─────────────────────────────────────────────
+  # Telegram Bot (webhook server)
+  # ─────────────────────────────────────────────
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: mining_bot
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      BOT_PORT: "8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    command: python bot.py run
+
+  # ─────────────────────────────────────────────
+  # Nginx (reverse proxy + serve frontend)
+  # ─────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: mining_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./admin:/usr/share/nginx/admin:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+      - bot
+
+volumes:
+  postgres_data:

@@ -1,0 +1,1186 @@
+            <th><th>Telegram ID</th><th>Name</th><th>Username</th><th>Balance</th><th>Premium</th><th>Joined</th><th>Actions</th></tr>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OX Mining — Admin Panel</title>
+  <meta name="description" content="Secure admin dashboard for OX Mining management" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #111118;
+      --bg-card: rgba(255,255,255,0.04);
+      --bg-card-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.14);
+      --accent: #7c5cfc;
+      --accent-light: #9b7fff;
+      --accent-glow: rgba(124,92,252,0.25);
+      --success: #22d3a5;
+      --warning: #f5a623;
+      --danger: #ff4d6a;
+      --info: #3ec6f5;
+      --text-primary: #f0f0ff;
+      --text-secondary: #9090b8;
+      --text-muted: #5a5a78;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── Login Screen ──────────────────────────────────────────── */
+    #login-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-primary);
+      z-index: 1000;
+    }
+    #login-screen.hidden { display: none; }
+
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      border-radius: 24px;
+      padding: 48px 40px;
+      width: 360px;
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow), 0 0 80px var(--accent-glow);
+    }
+    .login-card h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .login-card p {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-bottom: 32px;
+    }
+    .login-logo {
+      font-size: 40px;
+      margin-bottom: 16px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 8px;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--accent);
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #5e3edb);
+      color: white;
+      width: 100%;
+      justify-content: center;
+      padding: 12px;
+      font-size: 15px;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-danger { background: rgba(255,77,106,0.15); color: var(--danger); border: 1px solid rgba(255,77,106,0.3); }
+    .btn-danger:hover { background: rgba(255,77,106,0.25); }
+    .btn-success { background: rgba(34,211,165,0.15); color: var(--success); border: 1px solid rgba(34,211,165,0.3); }
+    .btn-success:hover { background: rgba(34,211,165,0.25); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* ── Sidebar ───────────────────────────────────────────────── */
+    #app { display: flex; width: 100%; }
+
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo h2 {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-logo span { font-size: 22px; }
+    .sidebar-logo p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      margin-left: 30px;
+    }
+
+    .nav { padding: 12px 0; flex: 1; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: 0;
+      transition: all 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .nav-item:hover { background: var(--bg-card); color: var(--text-primary); }
+    .nav-item.active {
+      background: var(--accent-glow);
+      color: var(--accent-light);
+      border-left-color: var(--accent);
+    }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .sidebar-footer strong { color: var(--text-secondary); }
+
+    /* ── Main Content ──────────────────────────────────────────── */
+    .main {
+      margin-left: 240px;
+      flex: 1;
+      padding: 32px;
+      min-height: 100vh;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .page-header h1 { font-size: 22px; font-weight: 700; }
+    .page-header p { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* ── Stats Cards ───────────────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: all 0.2s;
+    }
+    .stat-card:hover { border-color: var(--border-strong); background: var(--bg-card-hover); }
+    .stat-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 28px; font-weight: 800; margin: 6px 0 2px; }
+    .stat-sub { font-size: 12px; color: var(--text-muted); }
+    .stat-icon { font-size: 22px; margin-bottom: 8px; }
+
+    /* ── Table ─────────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-header h3 { font-size: 14px; font-weight: 600; }
+    .card-body { padding: 20px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      text-align: left;
+      padding: 10px 14px;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg-card-hover); }
+    tbody td { padding: 12px 14px; color: var(--text-primary); }
+
+    /* ── Badges ────────────────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-success { background: rgba(34,211,165,0.15); color: var(--success); }
+    .badge-warning { background: rgba(245,166,35,0.15); color: var(--warning); }
+    .badge-danger { background: rgba(255,77,106,0.15); color: var(--danger); }
+    .badge-info { background: rgba(62,198,245,0.15); color: var(--info); }
+    .badge-muted { background: rgba(255,255,255,0.07); color: var(--text-muted); }
+
+    /* ── Search & Filter ───────────────────────────────────────── */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .search-input {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 8px 14px;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--accent); }
+
+    /* ── Notification ──────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 12px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow);
+      z-index: 9999;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: rgba(34,211,165,0.4); color: var(--success); }
+    .toast.error { border-color: rgba(255,77,106,0.4); color: var(--danger); }
+
+    /* ── Modal ─────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      padding: 32px;
+      width: 480px;
+      max-width: 95vw;
+      box-shadow: var(--shadow);
+    }
+    .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .modal p { color: var(--text-secondary); font-size: 13px; margin-bottom: 24px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+    /* ── Broadcast ─────────────────────────────────────────────── */
+    .broadcast-preview {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      font-size: 13px;
+      margin-top: 12px;
+      min-height: 60px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Settings ──────────────────────────────────────────────── */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-info label { font-size: 14px; font-weight: 500; display: block; }
+    .setting-info span { font-size: 12px; color: var(--text-muted); }
+
+    /* ── Spinner ───────────────────────────────────────────────── */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: white;
+      border-radius: 50%;
+      display: inline-block;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-row td { text-align: center; color: var(--text-muted); padding: 40px; }
+
+    /* ── Error state ───────────────────────────────────────────── */
+    .error-notice {
+      background: rgba(255,77,106,0.08);
+      border: 1px solid rgba(255,77,106,0.2);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--danger);
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">⛏️</div>
+    <h1>Admin Login</h1>
+    <p>OX Mining Control Panel</p>
+    <div id="login-error" class="error-notice" style="display:none;"></div>
+    <div class="form-group">
+      <label>API Base URL</label>
+      <input type="text" id="api-url" value="http://localhost:5000" placeholder="https://your-api.com" />
+    </div>
+    <div class="form-group">
+      <label>Admin Secret Key</label>
+      <input type="password" id="admin-key" placeholder="Enter your admin secret key" />
+    </div>
+    <div class="form-group">
+      <label>Your Telegram ID</label>
+      <input type="number" id="admin-telegram-id" placeholder="123456789" />
+    </div>
+    <button class="btn btn-primary" onclick="doLogin()">
+      <span id="login-btn-text">Sign In →</span>
+    </button>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app" style="display:none;">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h2><span>🐂</span> OX Mining Admin</h2>
+      <p id="admin-id-display">Logged in</p>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="switchPage('dashboard')" id="nav-dashboard">
+        <span class="icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="switchPage('users')" id="nav-users">
+        <span class="icon">👥</span> Users
+      </div>
+      <div class="nav-item" onclick="switchPage('withdrawals')" id="nav-withdrawals">
+        <span class="icon">💸</span> Withdrawals
+      </div>
+      <div class="nav-item" onclick="switchPage('transactions')" id="nav-transactions">
+        <span class="icon">📒</span> Transactions
+      </div>
+      <div class="nav-item" onclick="switchPage('tasks')" id="nav-tasks">
+        <span class="icon">✅</span> Tasks
+      </div>
+      <div class="nav-item" onclick="switchPage('broadcast')" id="nav-broadcast">
+        <span class="icon">📢</span> Broadcast
+      </div>
+      <div class="nav-item" onclick="switchPage('settings')" id="nav-settings">
+        <span class="icon">⚙️</span> Settings
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <strong id="sidebar-api-url">—</strong><br>
+      <button class="btn btn-sm btn-danger" style="margin-top:10px;width:100%;justify-content:center;" onclick="logout()">Logout</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p id="dashboard-updated">Loading stats...</p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="loadDashboard()">🔄 Refresh</button>
+      </div>
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">Total Users</div><div class="stat-value" id="s-users">—</div></div>
+        <div class="stat-card"><div class="stat-icon">⛏️</div><div class="stat-label">Active Miners</div><div class="stat-value" id="s-mining">—</div></div>
+        <div class="stat-card"><div class="stat-icon">🪙</div><div class="stat-label">Coins Distributed</div><div class="stat-value" id="s-coins">—</div></div>
+        <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-label">Pending Withdrawals</div><div class="stat-value" id="s-withdrawals">—</div></div>
+        <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-label">Stars Collected</div><div class="stat-value" id="s-stars">—</div></div>
+        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">Total Referrals</div><div class="stat-value" id="s-referrals">—</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>🏆 Top Miners (Live)</h3></div>
+        <table>
+          <thead><tr><th>#</th><th>User</th><th>Coins Mined</th><th>Rate</th><th>Status</th></tr></thead>
+          <tbody id="top-miners-table">
+            <tr class="loading-row"><td colspan="5"><span class="spinner"></span> Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Users -->
+    <div class="page" id="page-users">
+      <div class="page-header">
+        <div><h1>Users</h1><p>Manage all registered users</p></div>
+        <button class="btn btn-primary btn-sm" onclick="loadUsers()">🔄 Refresh</button>
+      </div>
+      <div class="toolbar">
+        <input class="search-input" type="text" placeholder="Search by Telegram ID or username..." id="user-search" oninput="filterUsers()" />
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Telegram ID</th><th>Name</th><th>Username</th><th>Balance</th><th>Premium</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody id="users-table">
+            <tr class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Withdrawals -->
+    <div class="page" id="page-withdrawals">
+      <div class="page-header">
+        <div><h1>Withdrawals</h1><p>Review and process withdrawal requests</p></div>
+        <button class="btn btn-primary btn-sm" onclick="loadWithdrawals()">🔄 Refresh</button>
+      </div>
+      <div class="toolbar">
+        <select class="search-input" id="withdrawal-filter" onchange="loadWithdrawals()" style="flex:0;width:auto;padding:8px 12px;">
+          <option value="">All</option>
+          <option value="PENDING">Pending</option>
+          <option value="REVIEW">Under Review</option>
+          <option value="APPROVED">Approved</option>
+          <option value="REJECTED">Rejected</option>
+          <option value="PAID">Paid</option>
+        </select>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>ID</th><th>User</th><th>Coins</th><th>Method</th><th>Status</th><th>Requested</th><th>Actions</th></tr></thead>
+          <tbody id="withdrawals-table">
+            <tr class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="page" id="page-transactions">
+      <div class="page-header">
+        <div><h1>Transactions</h1><p>Coin ledger — all movements</p></div>
+        <button class="btn btn-primary btn-sm" onclick="loadTransactions()">🔄 Refresh</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>ID</th><th>User</th><th>Type</th><th>Amount</th><th>Balance After</th><th>Reference</th><th>Date</th></tr></thead>
+          <tbody id="transactions-table">
+            <tr class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tasks -->
+    <div class="page" id="page-tasks">
+      <div class="page-header">
+        <div><h1>Tasks</h1><p>Manage available user tasks</p></div>
+        <button class="btn btn-primary btn-sm" onclick="openTaskModal()">+ New Task</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Reward</th><th>Repeatable</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="tasks-table">
+            <tr class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Broadcast -->
+    <div class="page" id="page-broadcast">
+      <div class="page-header">
+        <div><h1>Broadcast</h1><p>Send message to all users via bot</p></div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="form-group">
+            <label>Message (HTML supported)</label>
+            <textarea id="broadcast-msg" rows="5" placeholder="Enter your message here..." oninput="updatePreview()"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Preview</label>
+            <div class="broadcast-preview" id="broadcast-preview">Your message will appear here...</div>
+          </div>
+          <button class="btn btn-primary" style="width:auto;" onclick="sendBroadcast()">📢 Send Broadcast</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div><h1>App Settings</h1><p>Configure mining economy parameters</p></div>
+        <button class="btn btn-success btn-sm" onclick="saveSettings()">💾 Save Changes</button>
+      </div>
+      <div class="settings-grid">
+        <div class="card">
+          <div class="card-header"><h3>🐂 Mining Economy</h3></div>
+          <div class="card-body">
+            <div class="setting-row">
+              <div class="setting-info"><label>Default Mining Rate</label><span>OX per hour (free tier)</span></div>
+              <input type="number" id="set-default-rate" value="10" style="width:80px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:6px 10px;border-radius:6px;font-size:13px;outline:none;" />
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><label>Session Duration (hours)</label><span>Max mining session length</span></div>
+              <input type="number" id="set-session-hours" value="8" style="width:80px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:6px 10px;border-radius:6px;font-size:13px;outline:none;" />
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><label>Ad Reward Coins</label><span>Coins per ad viewed</span></div>
+              <input type="number" id="set-ad-reward" value="100" style="width:80px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:6px 10px;border-radius:6px;font-size:13px;outline:none;" />
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><label>Ad Cooldown (minutes)</label><span>Minimum time between ads</span></div>
+              <input type="number" id="set-ad-cooldown" value="5" style="width:80px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:6px 10px;border-radius:6px;font-size:13px;outline:none;" />
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><label>Daily Ad Limit</label><span>Max ads per user per day</span></div>
+              <input type="number" id="set-ad-limit" value="10" style="width:80px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:6px 10px;border-radius:6px;font-size:13px;outline:none;" />
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>👥 Referral & Withdrawals</h3></div>
+          <div class="card-body">
+            <div class="setting-row">
+              <div class="setting-info"><label>Referral Reward Coins</label><span>Bonus per referral</span></div>
+              <input type="number" id="set-referral-reward" value="500" style="width:80px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:6px 10px;border-radius:6px;font-size:13px;outline:none;" />
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><label>Min Withdrawal (coins)</label><span>Minimum to request</span></div>
+              <input type="number" id="set-min-withdraw" value="1000000" style="width:100px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:6px 10px;border-radius:6px;font-size:13px;outline:none;" />
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><label>Withdrawal Fee (%)</label><span>Platform fee on withdrawals</span></div>
+              <input type="number" id="set-withdraw-fee" value="5" style="width:80px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:6px 10px;border-radius:6px;font-size:13px;outline:none;" />
+            </div>
+          </div>
+        </div>
+        <div class="card" style="grid-column:1 / -1;">
+          <div class="card-header"><h3>🚀 Boost Plans</h3><button class="btn btn-primary btn-sm" onclick="loadBoostPlans()">🔄 Refresh</button></div>
+          <div class="card-body" style="padding:0;">
+            <table>
+              <thead><tr><th>Plan</th><th>Rate / hour</th><th>Stars</th><th>Duration</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="boost-plans-table"><tr class="loading-row"><td colspan="6"><span class="spinner"></span> Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Withdraw Action Modal -->
+<div class="modal-overlay" id="withdraw-modal">
+  <div class="modal">
+    <h3 id="modal-title">Withdrawal Action</h3>
+    <p id="modal-desc">Update the status of this withdrawal request.</p>
+    <div class="form-group">
+      <label>New Status</label>
+      <select id="modal-status">
+        <option value="REVIEW">Under Review</option>
+        <option value="APPROVED">Approved</option>
+        <option value="PAID">Paid</option>
+        <option value="REJECTED">Rejected</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Admin Note (optional)</label>
+      <input type="text" id="modal-note" placeholder="Reason or confirmation..." />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-success btn-sm" onclick="submitWithdrawAction()">✓ Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ban User Modal -->
+<div class="modal-overlay" id="ban-modal">
+  <div class="modal">
+    <h3>⚠️ Ban User</h3>
+    <p id="ban-desc">This will prevent the user from using the app. Are you sure?</p>
+    <div class="modal-actions">
+      <button class="btn btn-sm" style="background:var(--bg-card);border:1px solid var(--border);" onclick="closeBanModal()">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmBan()">🚫 Ban User</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Create Modal -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <h3>+ New Task</h3>
+    <p>Create a new task for users to complete.</p>
+    <div class="form-group">
+      <label>Display Name</label>
+      <input type="text" id="task-display-name" placeholder="e.g. Follow on Instagram" />
+    </div>
+    <div class="form-group">
+      <label>Unique Slug (name)</label>
+      <input type="text" id="task-name" placeholder="e.g. follow_instagram" />
+    </div>
+    <div class="form-group">
+      <label>Task Type</label>
+      <select id="task-type">
+        <option value="JOIN_CHANNEL">JOIN_CHANNEL</option>
+        <option value="JOIN_GROUP">JOIN_GROUP</option>
+        <option value="FOLLOW">FOLLOW</option>
+        <option value="VISIT_WEBSITE">VISIT_WEBSITE</option>
+        <option value="PLAY_GAME">PLAY_GAME</option>
+        <option value="DAILY_LOGIN">DAILY_LOGIN</option>
+        <option value="INVITE_FRIEND">INVITE_FRIEND</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Reward (OX)</label>
+      <input type="number" id="task-reward" placeholder="500" min="1" />
+    </div>
+    <div class="form-group">
+      <label>Target URL (optional)</label>
+      <input type="text" id="task-url" placeholder="https://t.me/yourchannel" />
+    </div>
+    <div class="form-group">
+      <label>Description (optional)</label>
+      <input type="text" id="task-desc" placeholder="Short description" />
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+      <input type="checkbox" id="task-repeatable" style="width:auto;" />
+      <label style="text-transform:none;font-size:14px;margin:0;">Repeatable (can be done multiple times)</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" onclick="closeTaskModal()">Cancel</button>
+      <button class="btn btn-success btn-sm" onclick="submitNewTask()">✓ Create Task</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────
+let API_BASE = '';
+let ADMIN_KEY = '';
+let ADMIN_TG_ID = '';
+let allUsers = [];
+let currentWithdrawId = null;
+let currentBanUserId = null;
+
+// ── Auth ──────────────────────────────────────────────────────────────
+function doLogin() {
+  const url = document.getElementById('api-url').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('admin-key').value.trim();
+  const tid = document.getElementById('admin-telegram-id').value.trim();
+
+  if (!url || !key || !tid) {
+    showLoginError('All fields are required.');
+    return;
+  }
+
+  API_BASE = url;
+  ADMIN_KEY = key;
+  ADMIN_TG_ID = tid;
+
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('admin-id-display').textContent = `TG: ${ADMIN_TG_ID}`;
+  document.getElementById('sidebar-api-url').textContent = API_BASE;
+
+  loadDashboard();
+  loadUsers();
+  loadWithdrawals();
+  loadTransactions();
+  loadTasks();
+  loadBoostPlans();
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.style.display = 'block';
+  el.textContent = msg;
+}
+
+function logout() {
+  API_BASE = ADMIN_KEY = ADMIN_TG_ID = '';
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app').style.display = 'none';
+}
+
+// ── API Helper ────────────────────────────────────────────────────────
+async function api(path, method = 'GET', body = null) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Admin-Key': ADMIN_KEY,
+      'X-Admin-Telegram-Id': ADMIN_TG_ID,
+    },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(`${API_BASE}${path}`, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// ── Navigation ────────────────────────────────────────────────────────
+function switchPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  document.getElementById(`nav-${name}`).classList.add('active');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const data = await api('/api/v1/admin/stats');
+    document.getElementById('s-users').textContent = fmtNum(data.total_users);
+    document.getElementById('s-mining').textContent = fmtNum(data.active_miners);
+    document.getElementById('s-coins').textContent = fmtCoins(data.total_coins_distributed);
+    document.getElementById('s-withdrawals').textContent = fmtNum(data.pending_withdrawals);
+    document.getElementById('s-stars').textContent = fmtNum(data.total_stars_collected);
+    document.getElementById('s-referrals').textContent = fmtNum(data.total_referrals);
+    document.getElementById('dashboard-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+
+    const top = data.top_miners || [];
+    const tbody = document.getElementById('top-miners-table');
+    tbody.innerHTML = top.length === 0
+      ? '<tr class="loading-row"><td colspan="5">No data yet</td></tr>'
+      : top.map((m, i) => `
+          <tr>
+            <td><strong>#${i+1}</strong></td>
+            <td>${m.first_name}${m.username ? ` <span style="color:var(--text-muted)">@${m.username}</span>` : ''}</td>
+            <td>${fmtCoins(m.mined_coins_total)}</td>
+            <td>${m.mining_rate}/hr</td>
+            <td>${m.is_mining ? '<span class="badge badge-success">Mining</span>' : '<span class="badge badge-muted">Idle</span>'}</td>
+          </tr>`).join('');
+  } catch (e) {
+    document.getElementById('dashboard-updated').textContent = `⚠ Error: ${e.message}`;
+  }
+}
+
+// ── Users ─────────────────────────────────────────────────────────────
+async function loadUsers() {
+  try {
+    const data = await api('/api/v1/admin/users?limit=200');
+    allUsers = data.users || [];
+    renderUsers(allUsers);
+  } catch (e) {
+    document.getElementById('users-table').innerHTML =
+      `<tr class="loading-row"><td colspan="7" style="color:var(--danger)">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById('users-table');
+  if (!users.length) {
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="7">No users found</td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td><code>${u.telegram_id}</code></td>
+      <td>${u.first_name || ''} ${u.last_name || ''}</td>
+      <td>${u.username ? `@${u.username}` : '<span style="color:var(--text-muted)">—</span>'}</td>
+      <td>${fmtCoins(u.available_coins || 0)}</td>
+      <td>${u.is_premium ? '<span class="badge badge-info">⭐ Premium</span>' : '—'}</td>
+      <td>${fmtDate(u.created_at)}</td>
+      <td>
+        <button class="btn btn-primary btn-sm" onclick="activateUserPlan(${u.telegram_id})">🎁 Plan</button>
+        ${u.is_banned
+          ? `<button class="btn btn-success btn-sm" onclick="unbanUser(${u.telegram_id})">✓ Unban</button>`
+          : `<button class="btn btn-danger btn-sm" onclick="openBanModal(${u.telegram_id}, '${(u.first_name||'').replace(/'/g,'')}')">🚫 Ban</button>`
+        }
+      </td>
+    </tr>`).join('');
+}
+
+function filterUsers() {
+  const q = document.getElementById('user-search').value.toLowerCase();
+  const filtered = allUsers.filter(u =>
+    String(u.telegram_id).includes(q) ||
+    (u.username || '').toLowerCase().includes(q) ||
+    (u.first_name || '').toLowerCase().includes(q)
+  );
+  renderUsers(filtered);
+}
+
+async function activateUserPlan(userId) {
+  const planName = window.prompt('Plan name: normal, bronze, silver, or gold', 'bronze');
+  if (!planName) return;
+
+  try {
+    await api(`/api/v1/admin/users/${userId}/boost`, 'POST', { plan_name: planName.trim().toLowerCase() });
+    showToast(`Plan activated for user ${userId}`);
+    loadUsers();
+  } catch (e) {
+    showToast(`Error: ${e.message}`, 'error');
+  }
+}
+
+// ── Boost Plans ──────────────────────────────────────────────────────
+async function loadBoostPlans() {
+  const tbody = document.getElementById('boost-plans-table');
+  if (!tbody) return;
+
+  try {
+    const data = await api('/api/v1/admin/boosts');
+    const plans = data.plans || [];
+    tbody.innerHTML = plans.length ? plans.map(plan => `
+      <tr>
+        <td><strong>${plan.emoji || ''} ${plan.display_name}</strong></td>
+        <td>${fmtNum(plan.mining_rate)}</td>
+        <td>${fmtNum(plan.price_stars)} ⭐</td>
+        <td>${plan.duration_days ? `${plan.duration_days} days` : 'Free'}</td>
+        <td><span class="badge ${plan.is_active ? 'badge-success' : 'badge-muted'}">${plan.is_active ? 'Active' : 'Inactive'}</span></td>
+        <td><button class="btn ${plan.is_active ? 'btn-danger' : 'btn-success'} btn-sm" onclick="toggleBoostPlan(${plan.id}, ${!plan.is_active})">${plan.is_active ? 'Deactivate' : 'Activate'}</button></td>
+      </tr>
+    `).join('') : '<tr class="loading-row"><td colspan="6">No boost plans found</td></tr>';
+  } catch (e) {
+    tbody.innerHTML = `<tr class="loading-row"><td colspan="6" style="color:var(--danger)">Error: ${e.message}</td></tr>`;
+  }
+}
+
+async function toggleBoostPlan(planId, isActive) {
+  try {
+    await api(`/api/v1/admin/boosts/${planId}`, 'PATCH', { is_active: isActive });
+    showToast(`Boost plan ${isActive ? 'activated' : 'deactivated'}`);
+    loadBoostPlans();
+  } catch (e) {
+    showToast(`Error: ${e.message}`, 'error');
+  }
+}
+
+function openBanModal(id, name) {
+  currentBanUserId = id;
+  document.getElementById('ban-desc').textContent = `Ban user ${name} (${id})? They will lose access to the app.`;
+  document.getElementById('ban-modal').classList.add('show');
+}
+function closeBanModal() { document.getElementById('ban-modal').classList.remove('show'); }
+
+async function confirmBan() {
+  try {
+    await api(`/api/v1/admin/users/${currentBanUserId}/ban`, 'POST');
+    closeBanModal();
+    showToast('User banned successfully');
+    loadUsers();
+  } catch (e) { showToast(`Error: ${e.message}`, 'error'); }
+}
+
+async function unbanUser(id) {
+  try {
+    await api(`/api/v1/admin/users/${id}/unban`, 'POST');
+    showToast('User unbanned');
+    loadUsers();
+  } catch (e) { showToast(`Error: ${e.message}`, 'error'); }
+}
+
+// ── Withdrawals ───────────────────────────────────────────────────────
+async function loadWithdrawals() {
+  const filter = document.getElementById('withdrawal-filter').value;
+  const q = filter ? `?status=${filter}` : '';
+  try {
+    const data = await api(`/api/v1/admin/withdrawals${q}`);
+    const withdrawals = data.withdrawals || [];
+    const tbody = document.getElementById('withdrawals-table');
+    if (!withdrawals.length) {
+      tbody.innerHTML = '<tr class="loading-row"><td colspan="7">No withdrawals found</td></tr>';
+      return;
+    }
+    const statusBadge = s => {
+      const m = {PENDING:'warning',REVIEW:'info',APPROVED:'success',PAID:'success',REJECTED:'danger',CANCELLED:'muted'};
+      return `<span class="badge badge-${m[s]||'muted'}">${s}</span>`;
+    };
+    tbody.innerHTML = withdrawals.map(w => `
+      <tr>
+        <td>#${w.id}</td>
+        <td><code>${w.user_id}</code></td>
+        <td>${fmtCoins(w.requested_coins)}</td>
+        <td>${w.method}</td>
+        <td>${statusBadge(w.status)}</td>
+        <td>${fmtDate(w.created_at)}</td>
+        <td>
+          ${['PENDING','REVIEW'].includes(w.status)
+            ? `<button class="btn btn-sm" style="background:var(--accent-glow);color:var(--accent-light);border:1px solid var(--accent)" onclick="openWithdrawModal(${w.id}, '${w.user_id}', ${w.requested_coins})">Update</button>`
+            : '—'}
+        </td>
+      </tr>`).join('');
+  } catch (e) {
+    document.getElementById('withdrawals-table').innerHTML =
+      `<tr class="loading-row"><td colspan="7" style="color:var(--danger)">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function openWithdrawModal(id, userId, coins) {
+  currentWithdrawId = id;
+  document.getElementById('modal-title').textContent = `Withdrawal #${id}`;
+  document.getElementById('modal-desc').textContent = `User ${userId} requested ${fmtCoins(coins)} coins.`;
+  document.getElementById('modal-note').value = '';
+  document.getElementById('withdraw-modal').classList.add('show');
+}
+function closeModal() { document.getElementById('withdraw-modal').classList.remove('show'); }
+
+async function submitWithdrawAction() {
+  const status = document.getElementById('modal-status').value;
+  const note = document.getElementById('modal-note').value;
+  try {
+    await api(`/api/v1/admin/withdrawals/${currentWithdrawId}`, 'PATCH', { status, admin_note: note });
+    closeModal();
+    showToast(`Withdrawal updated to ${status}`);
+    loadWithdrawals();
+  } catch (e) { showToast(`Error: ${e.message}`, 'error'); }
+}
+
+// ── Transactions ──────────────────────────────────────────────────────
+async function loadTransactions() {
+  try {
+    const data = await api('/api/v1/admin/transactions?limit=100');
+    const txs = data.transactions || [];
+    const typeBadge = t => {
+      const m = {MINING:'success',AD_REWARD:'info',REFERRAL:'info',DAILY_REWARD:'info',BOOST:'warning',PURCHASE:'warning',WITHDRAW:'danger',REFUND:'success',ADMIN_ADJUSTMENT:'muted',TASK:'info'};
+      return `<span class="badge badge-${m[t]||'muted'}">${t}</span>`;
+    };
+    document.getElementById('transactions-table').innerHTML = txs.length === 0
+      ? '<tr class="loading-row"><td colspan="7">No transactions</td></tr>'
+      : txs.map(tx => `
+          <tr>
+            <td>#${tx.id}</td>
+            <td><code>${tx.user_id}</code></td>
+            <td>${typeBadge(tx.type)}</td>
+            <td style="color:${tx.amount > 0 ? 'var(--success)' : 'var(--danger)'}">${tx.amount > 0 ? '+' : ''}${fmtCoins(tx.amount)}</td>
+            <td>${fmtCoins(tx.balance_after)}</td>
+            <td><span style="color:var(--text-muted);font-size:12px">${tx.reference || '—'}</span></td>
+            <td>${fmtDate(tx.created_at)}</td>
+          </tr>`).join('');
+  } catch (e) {
+    document.getElementById('transactions-table').innerHTML =
+      `<tr class="loading-row"><td colspan="7" style="color:var(--danger)">Error: ${e.message}</td></tr>`;
+  }
+}
+
+// ── Tasks ─────────────────────────────────────────────────────────────
+async function loadTasks() {
+  try {
+    const data = await api('/api/v1/admin/tasks');
+    const tasks = data.tasks || [];
+    document.getElementById('tasks-table').innerHTML = tasks.length === 0
+      ? '<tr class="loading-row"><td colspan="7">No tasks</td></tr>'
+      : tasks.map(t => `
+          <tr>
+            <td>#${t.id}</td>
+            <td><strong>${t.display_name}</strong></td>
+            <td><span class="badge badge-info">${t.task_type}</span></td>
+            <td>🪙 ${fmtCoins(t.reward_coins)}</td>
+            <td>${t.is_repeatable ? '🔁 Yes' : 'Once'}</td>
+            <td>${t.is_active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-muted">Hidden</span>'}</td>
+            <td>
+              <button class="btn btn-sm btn-danger" onclick="toggleTask(${t.id}, ${!t.is_active})">${t.is_active ? 'Disable' : 'Enable'}</button>
+            </td>
+          </tr>`).join('');
+  } catch (e) {
+    document.getElementById('tasks-table').innerHTML =
+      `<tr class="loading-row"><td colspan="7" style="color:var(--danger)">Error: ${e.message}</td></tr>`;
+  }
+}
+
+async function toggleTask(id, newState) {
+  try {
+    await api(`/api/v1/admin/tasks/${id}`, 'PATCH', { is_active: newState });
+    showToast(`Task ${newState ? 'enabled' : 'disabled'}`);
+    loadTasks();
+  } catch (e) { showToast(`Error: ${e.message}`, 'error'); }
+}
+
+function openTaskModal() {
+  document.getElementById('task-display-name').value = '';
+  document.getElementById('task-name').value = '';
+  document.getElementById('task-reward').value = '';
+  document.getElementById('task-url').value = '';
+  document.getElementById('task-desc').value = '';
+  document.getElementById('task-repeatable').checked = false;
+  document.getElementById('task-modal').classList.add('show');
+}
+function closeTaskModal() { document.getElementById('task-modal').classList.remove('show'); }
+
+async function submitNewTask() {
+  const display_name = document.getElementById('task-display-name').value.trim();
+  const name = document.getElementById('task-name').value.trim();
+  const task_type = document.getElementById('task-type').value;
+  const reward_coins = parseInt(document.getElementById('task-reward').value);
+  const target_url = document.getElementById('task-url').value.trim();
+  const description = document.getElementById('task-desc').value.trim();
+  const is_repeatable = document.getElementById('task-repeatable').checked;
+
+  if (!display_name || !name || !reward_coins) {
+    showToast('Display name, slug and reward are required', 'error');
+    return;
+  }
+
+  try {
+    await api('/api/v1/admin/tasks', 'POST', { name, display_name, task_type, reward_coins, target_url, description, is_repeatable });
+    closeTaskModal();
+    showToast('Task created successfully');
+    loadTasks();
+  } catch (e) { showToast(`Error: ${e.message}`, 'error'); }
+}
+
+// ── Broadcast ─────────────────────────────────────────────────────────
+function updatePreview() {
+  const msg = document.getElementById('broadcast-msg').value;
+  document.getElementById('broadcast-preview').innerHTML = msg || '<span style="color:var(--text-muted)">Your message will appear here...</span>';
+}
+
+async function sendBroadcast() {
+  const msg = document.getElementById('broadcast-msg').value.trim();
+  if (!msg) { showToast('Message is empty', 'error'); return; }
+  if (!confirm(`Send broadcast to ALL users?\n\n${msg.substring(0, 100)}...`)) return;
+  try {
+    const data = await api('/api/v1/admin/broadcast', 'POST', { message: msg });
+    showToast(`Broadcast sent to ${data.sent || 0} users`);
+    document.getElementById('broadcast-msg').value = '';
+    updatePreview();
+  } catch (e) { showToast(`Error: ${e.message}`, 'error'); }
+}
+
+// ── Settings ──────────────────────────────────────────────────────────
+async function saveSettings() {
+  const settings = {
+    DEFAULT_MINING_RATE: document.getElementById('set-default-rate').value,
+    MINING_SESSION_HOURS: document.getElementById('set-session-hours').value,
+    AD_REWARD_COINS: document.getElementById('set-ad-reward').value,
+    AD_COOLDOWN_MINUTES: document.getElementById('set-ad-cooldown').value,
+    AD_DAILY_LIMIT: document.getElementById('set-ad-limit').value,
+    REFERRAL_REWARD_COINS: document.getElementById('set-referral-reward').value,
+    MIN_WITHDRAWAL_COINS: document.getElementById('set-min-withdraw').value,
+    WITHDRAWAL_FEE_PERCENT: document.getElementById('set-withdraw-fee').value,
+  };
+  try {
+    await api('/api/v1/admin/settings', 'POST', { settings });
+    showToast('Settings saved successfully');
+  } catch (e) { showToast(`Error: ${e.message}`, 'error'); }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function fmtNum(n) {
+  if (n == null) return '—';
+  if (n >= 1_000_000) return (n/1_000_000).toFixed(1) + 'M';
+  if (n >= 1_000) return (n/1_000).toFixed(1) + 'K';
+  return String(n);
+}
+function fmtCoins(n) {
+  if (n == null) return '—';
+  return fmtNum(n) + ' 🪙';
+}
+function fmtDate(s) {
+  if (!s) return '—';
+  return new Date(s).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+// Allow pressing Enter to login
+document.getElementById('admin-key').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>
