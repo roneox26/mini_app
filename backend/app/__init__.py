@@ -88,13 +88,4 @@ def create_app(config=None):
         app.logger.error(f"Internal error: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-    # Seed default data on first startup
-    with app.app_context():
-        try:
-            from app.models import seed_default_tasks, seed_boost_plans
-            seed_boost_plans()
-            seed_default_tasks()
-        except Exception as e:
-            app.logger.warning(f"Seed skipped (DB may not be ready): {e}")
-
     return app

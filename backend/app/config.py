@@ -103,7 +103,7 @@ class Config:
 
     # Rate Limiting
     RATELIMIT_DEFAULT = "200 per day;50 per hour"
-    RATELIMIT_STORAGE_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    RATELIMIT_STORAGE_URI = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 
 class DevelopmentConfig(Config):
