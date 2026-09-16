@@ -41,6 +41,9 @@ def create_app(config=None):
     from app.api.v1.admin import admin_bp
     app.register_blueprint(admin_bp)
 
+    from app.api.telegram import telegram_bp
+    app.register_blueprint(telegram_bp)
+
     # Health check
     @app.route("/")
     def root():

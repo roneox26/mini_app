@@ -158,22 +158,20 @@ Point your domain's DNS to the server, configure SSL in `nginx/nginx.conf`, and 
 
 This repository includes `render.yaml` and a root `Dockerfile` for a Render Blueprint deployment. The Blueprint creates:
 
-- a public web service that runs migrations, serves the Flask API, and serves the Mini App at `/`
-- separate Celery worker and beat services
-- a Telegram bot webhook service at `/webhook`
+- one public web service that runs migrations, serves the Flask API, user Mini App at `/`, admin panel at `/admin`, and Telegram webhook at `/webhook`
 - managed PostgreSQL and Redis-compatible Key Value services
 
 1. Push the repository to GitHub and create a new **Blueprint** in Render from that repository.
 2. During the first deploy, enter the values marked `sync: false`, especially `TELEGRAM_BOT_TOKEN`, `FIRST_ADMIN_TELEGRAM_ID`, and Monetag credentials.
-3. After the web services are live, set the Telegram webhook to the bot service URL:
+3. After the web service is live, set the Telegram webhook to the same web service URL:
 
 ```bash
-python bot/bot.py set_webhook https://YOUR-BOT-SERVICE.onrender.com/webhook
+python bot/bot.py set_webhook https://YOUR-WEB-SERVICE.onrender.com/webhook
 ```
 
-4. Set the bot's Mini App URL to the web service URL in the `FRONTEND_URL` environment variable if you use a custom Render URL or domain.
+4. Set `FRONTEND_URL` to the web service URL if you use a custom Render URL or domain.
 
-Render web services provide their own `PORT`; the included startup commands bind to it automatically. Keep the Postgres and Redis services running because the API rate limiter, cache, Celery worker, and scheduled jobs depend on them.
+Render web services provide their own `PORT`; the included startup command binds to it automatically. Keep the Postgres and Redis services running because the API, rate limiter, and cache depend on them. Celery scheduled jobs are not started in this one-service profile.
 
 ## ⚠️ Notes
 
