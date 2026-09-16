@@ -140,7 +140,7 @@ if __name__ == "__main__":
             print(delete_webhook())
         elif sys.argv[1] == "run":
             # Run Flask app for webhook
-            port = int(os.getenv("BOT_PORT", 8080))
+            port = int(os.getenv("PORT", os.getenv("BOT_PORT", 8080)))
             app.run(host="0.0.0.0", port=port, debug=False)
     else:
         print("Usage: python bot.py [set_webhook|delete_webhook|run] [url]")

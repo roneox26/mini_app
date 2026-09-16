@@ -1,7 +1,9 @@
 """
 Flask Application Factory
 """
-from flask import Flask, jsonify
+from pathlib import Path
+
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -15,6 +17,9 @@ limiter = Limiter(key_func=get_remote_address)
 
 def create_app(config=None):
     app = Flask(__name__)
+    project_root = Path(__file__).resolve().parents[2]
+    frontend_root = project_root / "frontend"
+    admin_root = project_root / "admin"
 
     # Load config
     cfg = config or get_config()
@@ -39,12 +44,24 @@ def create_app(config=None):
     # Health check
     @app.route("/")
     def root():
-        return jsonify({
-            "service": "telegram-mining-api",
-            "status": "ok",
-            "health": "/health",
-            "api": "/api/v1",
-        }), 200
+        return send_from_directory(frontend_root, "index.html")
+
+    @app.route("/admin", defaults={"filename": "index.html"})
+    @app.route("/admin/<path:filename>")
+    def admin_files(filename):
+        requested = admin_root / filename
+        if requested.is_file():
+            return send_from_directory(admin_root, filename)
+        return send_from_directory(admin_root, "index.html")
+
+    @app.route("/<path:filename>")
+    def frontend_files(filename):
+        if filename.startswith("api/"):
+            return jsonify({"error": "Not found"}), 404
+        requested = frontend_root / filename
+        if requested.is_file():
+            return send_from_directory(frontend_root, filename)
+        return send_from_directory(frontend_root, "index.html")
 
     @app.route("/health")
     def health():
