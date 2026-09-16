@@ -154,24 +154,37 @@ docker-compose up -d --scale backend=3
 
 Point your domain's DNS to the server, configure SSL in `nginx/nginx.conf`, and set Cloudflare as your CDN.
 
-## ☁️ Deploy on Render
+## ☁️ Deploy on Render Web Service
 
-This repository includes `render.yaml` and a root `Dockerfile` for a Render Blueprint deployment. The Blueprint creates:
+Deploy this repository as a single Render **Web Service**. Do not use a Blueprint.
 
-- one public web service that runs migrations, serves the Flask API, user Mini App at `/`, admin panel at `/admin`, and Telegram webhook at `/webhook`
-- managed PostgreSQL and Redis-compatible Key Value services
+1. Create **New > Web Service** and connect the GitHub repository.
+2. Choose **Docker** as the runtime.
+3. Set Dockerfile path to `./Dockerfile` and Docker context to `.`.
+4. Set the health check path to `/health`.
+5. Add the required environment variables, including external PostgreSQL and Redis URLs:
 
-1. Push the repository to GitHub and create a new **Blueprint** in Render from that repository.
-2. During the first deploy, enter the values marked `sync: false`, especially `TELEGRAM_BOT_TOKEN`, `FIRST_ADMIN_TELEGRAM_ID`, and Monetag credentials.
-3. After the web service is live, set the Telegram webhook to the same web service URL:
+```text
+FLASK_ENV=production
+DATABASE_URL=<your PostgreSQL connection string>
+REDIS_URL=<your Redis connection string>
+FRONTEND_URL=https://YOUR-SERVICE.onrender.com
+ALLOWED_ORIGINS=https://YOUR-SERVICE.onrender.com,https://t.me
+TELEGRAM_BOT_TOKEN=<your bot token>
+TELEGRAM_BOT_USERNAME=<your bot username>
+FIRST_ADMIN_TELEGRAM_ID=<your Telegram ID>
+SECRET_KEY=<strong random value>
+JWT_SECRET_KEY=<strong random value>
+ADMIN_SECRET_KEY=<strong random value>
+```
+
+Add Monetag variables from `.env.example` if ads are enabled. After deployment, set the Telegram webhook to the same web service URL:
 
 ```bash
 python bot/bot.py set_webhook https://YOUR-WEB-SERVICE.onrender.com/webhook
 ```
 
-4. Set `FRONTEND_URL` to the web service URL if you use a custom Render URL or domain.
-
-Render web services provide their own `PORT`; the included startup command binds to it automatically. Keep the Postgres and Redis services running because the API, rate limiter, and cache depend on them. Celery scheduled jobs are not started in this one-service profile.
+The service provides the user site at `/`, admin site at `/admin`, API at `/api/v1`, and Telegram webhook at `/webhook`. Render supplies `PORT`, and the included Docker startup command binds to it automatically. Use an external managed PostgreSQL and Redis provider because this single Web Service does not provide persistent storage.
 
 ## ⚠️ Notes
 
