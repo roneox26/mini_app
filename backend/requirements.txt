@@ -11,7 +11,6 @@ celery==5.4.0
 python-dotenv==1.0.1
 PyJWT==2.9.0
 requests==2.32.3
-pydantic==2.9.2
 gunicorn==23.0.0
 marshmallow==3.22.0
 cryptography==43.0.3
