@@ -102,7 +102,7 @@ def complete_task(task_id):
             amount=task.reward_coins,
             balance_before=balance_before,
             balance_after=account.available_coins,
-            reference=f"task_{task_id}",
+            reference_id=f"task_{task_id}",
             note=task.display_name,
         )
         db.session.add(tx)

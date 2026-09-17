@@ -161,7 +161,7 @@ def cleanup_expired_sessions():
                             amount=earned,
                             balance_before=balance_before,
                             balance_after=account.available_coins,
-                            reference=f"auto_claim_{account.id}",
+                            reference_id=f"auto_claim_{account.id}",
                             note="Auto-claimed by system (session expired)",
                         )
                         db.session.add(tx)

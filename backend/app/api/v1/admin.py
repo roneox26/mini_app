@@ -309,7 +309,7 @@ def update_withdrawal(withdrawal_id):
                 amount=w.requested_coins,
                 balance_before=balance_before,
                 balance_after=account.available_coins,
-                reference=f"refund_withdrawal_{withdrawal_id}",
+                reference_id=f"refund_withdrawal_{withdrawal_id}",
                 note="Withdrawal rejected — coins refunded",
             )
             db.session.add(tx)
