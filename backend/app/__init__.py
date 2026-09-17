@@ -67,6 +67,7 @@ def create_app(config=None):
         return send_from_directory(frontend_root, "index.html")
 
     @app.route("/health")
+    @limiter.exempt
     def health():
         return jsonify({"status": "ok", "service": "telegram-mining-api"}), 200
 
