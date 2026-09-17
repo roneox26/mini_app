@@ -23,13 +23,13 @@ const state = {
   boostPlans: [],
   adCooldown: 0,
   adCooldownTimer: null,
+  preloadedAdId: null,
 };
 
 // ============================================================
 // TELEGRAM WEBAPP SDK
 // ============================================================
 const tg = window.Telegram?.WebApp;
-let adSdkPromise = null;
 
 function initTelegramApp() {
   if (tg) {
@@ -148,6 +148,7 @@ function renderApp() {
   showScreen('mine');
   loadMiningStatus();
   loadBalance();
+  preloadRewardedAd();
   
   // Show admin button if user is admin
   if (state.user && state.user.is_admin) {
@@ -458,30 +459,26 @@ async function buyBoost(planId, planName, priceStars) {
 // ============================================================
 // ADS (Monetag)
 // ============================================================
-async function loadAdSdk() {
-  if (window.monetag) return window.monetag;
-  if (adSdkPromise) return adSdkPromise;
+function createAdEventId() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return `ad_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+}
 
-  adSdkPromise = (async () => {
-    const config = await apiCall('/ads/config');
-    if (!config.ok || !config.data?.enabled || !config.data.sdk_url) {
-      throw new Error('Rewarded ads are not configured');
-    }
+function getRewardedAdFunction() {
+  return window.show_11824725;
+}
 
-    await new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = config.data.sdk_url;
-      script.async = true;
-      script.onload = resolve;
-      script.onerror = () => reject(new Error('Ad provider failed to load'));
-      document.head.appendChild(script);
-    });
+async function preloadRewardedAd() {
+  const showAd = getRewardedAdFunction();
+  if (typeof showAd !== 'function') return;
 
-    if (!window.monetag) throw new Error('Ad provider SDK is unavailable');
-    return window.monetag;
-  })();
-
-  return adSdkPromise;
+  const eventId = createAdEventId();
+  try {
+    await showAd({ type: 'preload', ymid: eventId });
+    state.preloadedAdId = eventId;
+  } catch (error) {
+    console.warn('[ADS] Preload failed:', error);
+  }
 }
 
 async function watchAd() {
@@ -490,28 +487,33 @@ async function watchAd() {
     return;
   }
 
+  const showAd = getRewardedAdFunction();
+  if (typeof showAd !== 'function') {
+    showToast('Ad is still loading. Please try again.', 'error');
+    return;
+  }
+
+  const eventId = state.preloadedAdId || createAdEventId();
+  state.preloadedAdId = null;
+  showToast('Loading ad...');
+
   try {
-    const monetag = await loadAdSdk();
-    monetag.show({
-      type: 'rewarded',
-      onComplete: async (eventId) => {
-        const res = await apiCall('/ads/reward', 'POST', {
-          ad_event_id: eventId,
-          ad_type: 'rewarded_interstitial',
-        });
-        if (res.ok) {
-          showToast(`🎬 +${res.data.coins_earned} OX!`, 'success');
-          updateBalanceDisplay(res.data.new_balance);
-          startAdCooldown(5 * 60);  // 5 min
-        } else {
-          showToast(res.data.error || 'Ad reward failed', 'error');
-        }
-      },
-      onSkip: () => showToast('Watch the full ad to earn OX', 'error'),
+    await showAd({ ymid: eventId });
+    const res = await apiCall('/ads/reward', 'POST', {
+      ad_event_id: eventId,
+      ad_type: 'rewarded_interstitial',
     });
+    if (res.ok) {
+      showToast(`🎬 +${res.data.coins_earned} OX!`, 'success');
+      updateBalanceDisplay(res.data.new_balance);
+      startAdCooldown(5 * 60);
+      preloadRewardedAd();
+    } else {
+      showToast(res.data.error || 'Ad reward failed', 'error');
+    }
   } catch (error) {
-    console.error('[ADS]', error);
-    showToast('Rewarded ads are not configured yet', 'error');
+    console.warn('[ADS] Ad failed or skipped:', error);
+    showToast('Ad failed or was skipped', 'error');
   }
 }
 
