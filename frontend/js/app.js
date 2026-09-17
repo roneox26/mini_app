@@ -59,10 +59,15 @@ async function apiCall(endpoint, method = 'GET', body = null) {
       data = text ? JSON.parse(text) : {};
     } catch (jsonError) {
       console.error('[API] Invalid JSON:', text);
+      const detail = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
       return {
         ok: false,
         status: res.status,
-        data: { error: `Server returned an invalid response (${res.status}). Please try again.` },
+        data: {
+          error: detail
+            ? `Server error ${res.status}: ${detail}`
+            : `Server returned an invalid response (${res.status}). Please try again.`,
+        },
       };
     }
     console.log(`[API] ${res.status}`, data);
