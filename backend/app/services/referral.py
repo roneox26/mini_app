@@ -144,6 +144,10 @@ def check_and_reward_24h_activity(referee_user: "User") -> None:
 
 def get_referral_stats(user: "User") -> dict:
     from flask import current_app
+    if not user.referral_code:
+        user.referral_code = generate_referral_code(user.telegram_id)
+        db.session.commit()
+
     referrals = Referral.query.filter_by(referrer_id=user.telegram_id).all()
     total_earned = sum(r.total_reward_paid for r in referrals)
     # Qualified = completed at least first mining milestone

@@ -20,6 +20,6 @@ def list_referrals():
 @require_auth
 def referral_stats():
     stats = get_referral_stats(g.user)
-    bot_username = current_app.config.get("TELEGRAM_BOT_USERNAME", "YourBot")
+    bot_username = (current_app.config.get("TELEGRAM_BOT_USERNAME") or "YourBot").lstrip("@")
     stats["referral_link"] = f"https://t.me/{bot_username}?start={g.user.referral_code}"
     return jsonify(stats)

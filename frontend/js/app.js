@@ -525,13 +525,16 @@ function startAdCooldown(seconds) {
 // REFERRAL
 // ============================================================
 async function loadReferrals() {
+  const linkEl = document.getElementById('referral-link-text');
   const res = await apiCall('/referrals/stats');
-  if (!res.ok) return;
+  if (!res.ok) {
+    if (linkEl) linkEl.textContent = res.data?.error || 'Unable to load referral link';
+    return;
+  }
 
   const data = res.data;
   state.referralLink = data.referral_link;
 
-  const linkEl = document.getElementById('referral-link-text');
   const totalEl = document.getElementById('ref-total');
   const qualEl = document.getElementById('ref-qualified');
   const earnedEl = document.getElementById('ref-earned');
