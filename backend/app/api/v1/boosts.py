@@ -43,21 +43,35 @@ def create_boost_invoice(plan_id):
     if not token:
         return jsonify({"error": "Telegram payments are not configured"}), 503
 
-    response = requests.post(
-        f"https://api.telegram.org/bot{token}/createInvoiceLink",
-        json={
-            "title": f"{plan.display_name} Mining Boost",
-            "description": f"Increase your mining rate for {plan.duration_days} days.",
-            "payload": f"boost:{plan.id}:{g.user_id}",
-            "currency": "XTR",
-            "prices": [{"label": plan.display_name, "amount": plan.price_stars}],
-        },
-        timeout=15,
-    )
-    data = response.json()
+    try:
+        response = requests.post(
+            f"https://api.telegram.org/bot{token}/createInvoiceLink",
+            json={
+                "title": f"{plan.display_name} Mining Boost",
+                "description": f"Increase your mining rate for {plan.duration_days} days.",
+                "payload": f"boost:{plan.id}:{g.user_id}",
+                "currency": "XTR",
+                "prices": [{"label": plan.display_name, "amount": plan.price_stars}],
+            },
+            timeout=15,
+        )
+    except requests.RequestException:
+        current_app.logger.exception("Telegram invoice request failed")
+        return jsonify({"error": "Telegram payment service is unavailable"}), 502
+
+    try:
+        data = response.json()
+    except ValueError:
+        current_app.logger.error(
+            "Telegram returned non-JSON invoice response with status %s",
+            response.status_code,
+        )
+        return jsonify({"error": "Telegram payment service returned an invalid response"}), 502
+
     if not response.ok or not data.get("ok"):
-        current_app.logger.error("Telegram invoice creation failed: %s", data)
-        return jsonify({"error": "Could not create payment invoice"}), 502
+        telegram_error = data.get("description", "Could not create payment invoice")
+        current_app.logger.error("Telegram invoice creation failed: %s", telegram_error)
+        return jsonify({"error": telegram_error}), 502
     return jsonify({"invoice_url": data["result"]})
 
 

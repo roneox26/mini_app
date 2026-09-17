@@ -58,7 +58,11 @@ async function apiCall(endpoint, method = 'GET', body = null) {
       data = text ? JSON.parse(text) : {};
     } catch (jsonError) {
       console.error('[API] Invalid JSON:', text);
-      return { ok: false, status: res.status, data: { error: `Server returned invalid JSON (${res.status})` } };
+      return {
+        ok: false,
+        status: res.status,
+        data: { error: `Server returned an invalid response (${res.status}). Please try again.` },
+      };
     }
     console.log(`[API] ${res.status}`, data);
     if (res.status === 401 && !endpoint.startsWith('/auth/')) {
