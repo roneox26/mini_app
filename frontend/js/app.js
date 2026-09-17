@@ -29,6 +29,7 @@ const state = {
 // TELEGRAM WEBAPP SDK
 // ============================================================
 const tg = window.Telegram?.WebApp;
+let adSdkPromise = null;
 
 function initTelegramApp() {
   if (tg) {
@@ -452,15 +453,41 @@ async function buyBoost(planId, planName, priceStars) {
 // ============================================================
 // ADS (Monetag)
 // ============================================================
-function watchAd() {
+async function loadAdSdk() {
+  if (window.monetag) return window.monetag;
+  if (adSdkPromise) return adSdkPromise;
+
+  adSdkPromise = (async () => {
+    const config = await apiCall('/ads/config');
+    if (!config.ok || !config.data?.enabled || !config.data.sdk_url) {
+      throw new Error('Rewarded ads are not configured');
+    }
+
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = config.data.sdk_url;
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('Ad provider failed to load'));
+      document.head.appendChild(script);
+    });
+
+    if (!window.monetag) throw new Error('Ad provider SDK is unavailable');
+    return window.monetag;
+  })();
+
+  return adSdkPromise;
+}
+
+async function watchAd() {
   if (state.adCooldown > 0) {
     showToast(`Wait ${state.adCooldown}s before next ad`, 'error');
     return;
   }
 
-  // Monetag SDK — show rewarded interstitial
-  if (window.monetag) {
-    window.monetag.show({
+  try {
+    const monetag = await loadAdSdk();
+    monetag.show({
       type: 'rewarded',
       onComplete: async (eventId) => {
         const res = await apiCall('/ads/reward', 'POST', {
@@ -477,13 +504,9 @@ function watchAd() {
       },
       onSkip: () => showToast('Watch the full ad to earn OX', 'error'),
     });
-  } else {
-    // Dev fallback — simulate ad reward
-    if (window.location.hostname === 'localhost') {
-      simulateDevAdReward();
-    } else {
-      showToast('Ads not available right now', 'error');
-    }
+  } catch (error) {
+    console.error('[ADS]', error);
+    showToast('Rewarded ads are not configured yet', 'error');
   }
 }
 

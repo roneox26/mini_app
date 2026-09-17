@@ -38,6 +38,7 @@ class Config:
     MONETAG_ZONE_ID_REWARDED = os.getenv("MONETAG_ZONE_ID_REWARDED", "")
     MONETAG_ZONE_ID_POPUP = os.getenv("MONETAG_ZONE_ID_POPUP", "")
     MONETAG_SECRET_KEY = os.getenv("MONETAG_SECRET_KEY", "")
+    MONETAG_SDK_URL = os.getenv("MONETAG_SDK_URL", "")
 
     # Admin
     ADMIN_SECRET_KEY = os.getenv("ADMIN_SECRET_KEY", "admin-secret-change-in-production")

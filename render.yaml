@@ -41,6 +41,8 @@ services:
         sync: false
       - key: MONETAG_SECRET_KEY
         sync: false
+      - key: MONETAG_SDK_URL
+        sync: false
 
   - type: keyvalue
     name: ox-mining-redis
