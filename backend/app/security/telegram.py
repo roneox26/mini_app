@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import json
 import time
-from urllib.parse import unquote, parse_qsl
+from urllib.parse import parse_qsl
 
 import jwt
 from flask import current_app
@@ -57,7 +57,7 @@ def validate_telegram_init_data(init_data: str) -> dict | None:
 
         # Parse user data
         user_data_str = parsed.get("user", "{}")
-        user_data = json.loads(unquote(user_data_str))
+        user_data = json.loads(user_data_str)
         return user_data
 
     except Exception as e:

@@ -4,12 +4,14 @@ from flask import request, jsonify, g, current_app
 from app.api.v1 import api_v1
 from app.security.auth import require_auth
 from app.services.payment import get_boost_plans, activate_boost
-from app.models import BoostPlan
+from app.models import BoostPlan, seed_boost_plans
 
 
 @api_v1.route("/boosts", methods=["GET"])
 @require_auth
 def list_boosts():
+    if BoostPlan.query.count() == 0:
+        seed_boost_plans()
     plans = get_boost_plans()
     # Attach active boost info for the current user
     from app.models import UserBoost

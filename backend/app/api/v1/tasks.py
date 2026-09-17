@@ -4,13 +4,15 @@ from datetime import datetime, timezone
 from app.api.v1 import api_v1
 from app.security.auth import require_auth, require_admin
 from app.database import db
-from app.models import Task, UserTask, UserTaskStatus, MiningAccount, Transaction, TransactionType, TaskType
+from app.models import Task, UserTask, UserTaskStatus, MiningAccount, Transaction, TransactionType, TaskType, seed_default_tasks
 
 
 @api_v1.route("/tasks", methods=["GET", "POST"])
 @require_auth
 def tasks_endpoint():
     if request.method == "GET":
+        if Task.query.count() == 0:
+            seed_default_tasks()
         tasks = Task.query.filter_by(is_active=True).all()
         result = []
         for task in tasks:
