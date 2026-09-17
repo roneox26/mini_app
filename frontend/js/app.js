@@ -16,6 +16,7 @@ const state = {
   balance: null,
   miningStatus: null,
   token: null,
+  authReady: false,
   activeScreen: 'mine',
   miningTimer: null,
   referralLink: '',
@@ -60,6 +61,11 @@ async function apiCall(endpoint, method = 'GET', body = null) {
       return { ok: false, status: res.status, data: { error: `Server returned invalid JSON (${res.status})` } };
     }
     console.log(`[API] ${res.status}`, data);
+    if (res.status === 401 && !endpoint.startsWith('/auth/')) {
+      state.token = null;
+      state.authReady = false;
+      localStorage.removeItem('auth_token');
+    }
     return { ok: res.ok, status: res.status, data };
   } catch (err) {
     console.error('[API] Network error:', err);
@@ -84,6 +90,7 @@ async function authenticate() {
       const res = await apiCall('/me');
       if (res.ok) {
         state.user = res.data.user;
+        state.authReady = true;
         hideLoader();
         renderApp();
         return;
@@ -94,6 +101,7 @@ async function authenticate() {
     if (res.ok) {
       state.token = res.data.token;
       state.user = res.data.user;
+      state.authReady = true;
       localStorage.setItem('auth_token', state.token);
     }
     hideLoader();
@@ -109,10 +117,14 @@ async function authenticate() {
   if (res.ok) {
     state.token = res.data.token;
     state.user = res.data.user;
+    state.authReady = true;
     localStorage.setItem('auth_token', state.token);
     hideLoader();
     renderApp();
   } else {
+    state.token = null;
+    state.authReady = false;
+    localStorage.removeItem('auth_token');
     showToast('Authentication failed. Please restart the app.', 'error');
     setTimeout(() => hideLoader(), 2000);
   }
@@ -367,7 +379,13 @@ async function claimMining() {
 // ============================================================
 async function loadBoostPlans() {
   const res = await apiCall('/boosts');
-  if (!res.ok) return;
+  if (!res.ok) {
+    const container = document.getElementById('boost-plans-grid');
+    if (container) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">${res.data?.error || 'Please authenticate first'}</div></div>`;
+    }
+    return;
+  }
 
   state.boostPlans = res.data.plans;
   renderBoostPlans(res.data.plans);
@@ -398,7 +416,13 @@ async function buyBoost(planId, planName, priceStars) {
     return;
   }
 
-  if (!tg) {
+  if (!state.authReady || !state.token) {
+    showToast('Please authenticate before purchasing', 'error');
+    return;
+  }
+
+  const telegramWebApp = window.Telegram?.WebApp;
+  if (!telegramWebApp?.openInvoice) {
     showToast('Please open in Telegram to purchase', 'error');
     return;
   }
@@ -410,7 +434,7 @@ async function buyBoost(planId, planName, priceStars) {
     return;
   }
 
-  tg.openInvoice(res.data.invoice_url, (status) => {
+  telegramWebApp.openInvoice(res.data.invoice_url, (status) => {
     if (status === 'paid') {
       showToast(`${planName} boost activated!`, 'success');
       loadBoostPlans();
