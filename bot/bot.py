@@ -13,6 +13,7 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 MINI_APP_URL = os.getenv("FRONTEND_URL", "https://yourdomain.com")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://backend:5000")
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 logging.basicConfig(level=logging.INFO)
@@ -82,8 +83,11 @@ def handle_update(update: dict):
         if message.get("successful_payment"):
             payment = message["successful_payment"]
             logger.info(f"Successful payment: {payment}")
-            # The backend will handle the actual crediting via webhook from Telegram
-            # This is just logging/acknowledgement
+            requests.post(
+                f"{BACKEND_URL}/webhook/payment",
+                json={"user": user, "payment": payment},
+                timeout=15,
+            )
 
     # Handle callback queries (inline button presses)
     callback_query = update.get("callback_query")

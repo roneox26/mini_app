@@ -1,0 +1,52 @@
+services:
+  - type: web
+    name: ox-mining-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ox-mining-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: ox-mining-redis
+          property: connectionString
+      - key: FRONTEND_URL
+        value: https://ox-mining-api.onrender.com
+      - key: ALLOWED_ORIGINS
+        value: https://ox-mining-api.onrender.com,https://t.me
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: ADMIN_SECRET_KEY
+        generateValue: true
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: FIRST_ADMIN_TELEGRAM_ID
+        sync: false
+      - key: MONETAG_PUBLISHER_ID
+        sync: false
+      - key: MONETAG_ZONE_ID_REWARDED
+        sync: false
+      - key: MONETAG_ZONE_ID_POPUP
+        sync: false
+      - key: MONETAG_SECRET_KEY
+        sync: false
+
+  - type: keyvalue
+    name: ox-mining-redis
+    plan: free
+
+databases:
+  - name: ox-mining-db
+    databaseName: miningdb
+    user: mininguser

@@ -378,7 +378,7 @@ function renderBoostPlans(plans) {
   if (!container) return;
 
   container.innerHTML = plans.map(p => `
-    <div class="boost-plan-card ${p.name}" onclick="buyBoost('${p.name}', ${p.price_stars})">
+    <div class="boost-plan-card ${p.name}" onclick="buyBoost(${p.id}, '${p.name}', ${p.price_stars})">
       <div class="boost-plan-emoji">${p.emoji}</div>
       <div class="boost-plan-name">${p.display_name}</div>
       <div class="boost-plan-rate">${p.mining_rate}</div>
@@ -392,7 +392,7 @@ function renderBoostPlans(plans) {
   `).join('');
 }
 
-async function buyBoost(planName, priceStars) {
+async function buyBoost(planId, planName, priceStars) {
   if (priceStars === 0) {
     showToast('This is your current free plan', 'error');
     return;
@@ -403,13 +403,22 @@ async function buyBoost(planName, priceStars) {
     return;
   }
 
-  // Trigger Telegram Stars payment via Bot API invoice
-  // The bot must send an invoice link and user pays in Telegram
   showToast(`Initiating ⭐${priceStars} Stars payment...`);
+  const res = await apiCall(`/boosts/${planId}/invoice`, 'POST');
+  if (!res.ok || !res.data?.invoice_url) {
+    showToast(res.data?.error || 'Could not start payment', 'error');
+    return;
+  }
 
-  // In production: bot sends payment invoice, webhook receives successful_payment,
-  // then calls /boosts/{plan}/buy with the charge_id
-  // This is a placeholder that would be triggered server-side via the bot
+  tg.openInvoice(res.data.invoice_url, (status) => {
+    if (status === 'paid') {
+      showToast(`${planName} boost activated!`, 'success');
+      loadBoostPlans();
+      loadMiningStatus();
+    } else if (status === 'failed') {
+      showToast('Payment failed', 'error');
+    }
+  });
 }
 
 // ============================================================
