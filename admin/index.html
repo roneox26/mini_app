@@ -810,8 +810,21 @@ async function api(path, method = 'GET', body = null) {
     },
   };
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(`${API_BASE}${path}`, opts);
-  const data = await res.json();
+  const requestUrl = `${API_BASE}${path}`;
+  let res;
+  try {
+    res = await fetch(requestUrl, opts);
+  } catch (error) {
+    throw new Error(`Cannot reach API: ${requestUrl}`);
+  }
+
+  const text = await res.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (error) {
+    throw new Error(`API returned non-JSON (${res.status}) from ${requestUrl}`);
+  }
   if (!res.ok) throw new Error(data.error || 'Request failed');
   return data;
 }
