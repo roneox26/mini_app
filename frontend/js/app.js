@@ -25,6 +25,7 @@ const state = {
   adCooldownTimer: null,
   preloadedAdId: null,
 };
+const taskTargets = {};
 
 // ============================================================
 // TELEGRAM WEBAPP SDK
@@ -674,6 +675,8 @@ async function loadTasks() {
     }
 
     const tasks = Array.isArray(res.data?.tasks) ? res.data.tasks : [];
+    Object.keys(taskTargets).forEach(key => delete taskTargets[key]);
+    tasks.forEach(task => { taskTargets[task.id] = task.target_url || ''; });
 
     const ICONS = {
       JOIN_CHANNEL: '📢', JOIN_GROUP: '👥', FOLLOW: '⭐',
@@ -695,7 +698,7 @@ async function loadTasks() {
         <div class="task-action">
           ${task.user_status === 'COMPLETED'
             ? `<span class="badge badge-green">Done</span>`
-            : `<button class="btn btn-primary btn-sm" onclick="completeTask(${task.id})">${task.target_url ? '→ Go' : 'Claim'}</button>`
+            : `<button class="btn btn-primary btn-sm" onclick="openTask(${task.id})">${task.target_url ? '→ Go' : 'Claim'}</button>`
           }
         </div>
       </div>
@@ -705,6 +708,25 @@ async function loadTasks() {
     console.error('[TASKS] Error:', error);
     container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Failed to load tasks</div></div>`;
   }
+}
+
+function openTask(taskId) {
+  const targetUrl = taskTargets[taskId];
+  if (targetUrl) {
+    try {
+      const parsedUrl = new URL(targetUrl, window.location.origin);
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        showToast('Invalid task link', 'error');
+        return;
+      }
+      if (tg?.openLink) tg.openLink(parsedUrl.href);
+      else window.open(parsedUrl.href, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      showToast('Invalid task link', 'error');
+      return;
+    }
+  }
+  completeTask(taskId);
 }
 
 async function completeTask(taskId) {
