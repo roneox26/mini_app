@@ -2,8 +2,9 @@
 Flask Application Factory
 """
 from pathlib import Path
+import hashlib
 
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -12,7 +13,25 @@ from app.config import get_config
 from app.database import init_db
 
 
-limiter = Limiter(key_func=get_remote_address)
+def rate_limit_key():
+    """Use the authenticated client as the quota key when available."""
+    authorization = request.headers.get("Authorization", "")
+    if authorization.startswith("Bearer "):
+        token = authorization[7:].strip()
+        if token:
+            return f"token:{hashlib.sha256(token.encode()).hexdigest()}"
+
+    # Telegram auth has no Bearer token yet; isolate users by their signed initData.
+    if request.path.endswith("/auth/telegram"):
+        data = request.get_json(silent=True) or {}
+        init_data = data.get("initData", "")
+        if init_data:
+            return f"init:{hashlib.sha256(init_data.encode()).hexdigest()}"
+
+    return f"ip:{get_remote_address()}"
+
+
+limiter = Limiter(key_func=rate_limit_key)
 
 
 def create_app(config=None):

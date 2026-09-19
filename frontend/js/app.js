@@ -19,6 +19,7 @@ const state = {
   authReady: false,
   activeScreen: 'mine',
   miningTimer: null,
+  miningStatusRequest: null,
   referralLink: '',
   boostPlans: [],
   adCooldown: 0,
@@ -147,7 +148,6 @@ async function authenticate() {
 function renderApp() {
   renderHeader();
   showScreen('mine');
-  loadMiningStatus();
   loadBalance();
   preloadRewardedAd();
   
@@ -208,7 +208,8 @@ async function loadProfile() {
   if (profileAvatar) profileAvatar.src = user.photo_url || document.getElementById('user-avatar')?.src || '';
 
   document.getElementById('profile-name').textContent = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Anonymous';
-  document.getElementById('profile-username').textContent = user.username ? `@${user.username}` : 'No username';
+  const handle = user.username ? `@${user.username.replace(/^@/, '')}` : `ID: ${user.telegram_id || 'Unknown'}`;
+  document.getElementById('profile-username').textContent = handle;
   document.getElementById('profile-id').textContent = user.telegram_id ? `Telegram ID: ${user.telegram_id}` : '';
   document.getElementById('profile-available').textContent = formatCoinsExact(balance.available_coins || 0);
   document.getElementById('profile-pending').textContent = formatCoinsExact(balance.pending_coins || 0);
@@ -262,16 +263,27 @@ function formatCoinsExact(n) {
 // MINING
 // ============================================================
 async function loadMiningStatus() {
-  const res = await apiCall('/mining/status');
-  if (!res.ok) return;
+  if (state.miningStatusRequest) return state.miningStatusRequest;
 
-  state.miningStatus = res.data;
-  renderMiningUI(res.data);
+  state.miningStatusRequest = (async () => {
+    const res = await apiCall('/mining/status');
+    if (!res.ok) return res;
 
-  // Start live countdown timer
-  if (state.miningTimer) clearInterval(state.miningTimer);
-  if (res.data.is_mining && !res.data.session_full) {
-    state.miningTimer = setInterval(() => tickMining(), 1000);
+    state.miningStatus = res.data;
+    renderMiningUI(res.data);
+
+    // Start live countdown timer
+    if (state.miningTimer) clearInterval(state.miningTimer);
+    if (res.data.is_mining && !res.data.session_full) {
+      state.miningTimer = setInterval(() => tickMining(), 1000);
+    }
+    return res;
+  })();
+
+  try {
+    return await state.miningStatusRequest;
+  } finally {
+    state.miningStatusRequest = null;
   }
 }
 

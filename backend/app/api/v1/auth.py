@@ -75,6 +75,9 @@ def auth_telegram():
     try:
         user = User.query.filter_by(telegram_id=telegram_id).first()
         is_new_user = False
+        telegram_username = user_data.get("username")
+        if telegram_username:
+            telegram_username = telegram_username.lstrip("@").strip()
 
         if not user:
             is_new_user = True
@@ -89,7 +92,7 @@ def auth_telegram():
             user = User(
                 id=telegram_id,
                 telegram_id=telegram_id,
-                username=user_data.get("username"),
+                username=telegram_username,
                 first_name=user_data.get("first_name", "User"),
                 last_name=user_data.get("last_name"),
                 photo_url=user_data.get("photo_url"),
@@ -122,7 +125,8 @@ def auth_telegram():
 
         else:
             # Update user info on each login
-            user.username = user_data.get("username", user.username)
+            if telegram_username:
+                user.username = telegram_username
             user.first_name = user_data.get("first_name", user.first_name)
             user.last_name = user_data.get("last_name", user.last_name)
             user.is_premium = user_data.get("is_premium", user.is_premium)
