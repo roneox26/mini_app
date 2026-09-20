@@ -14,6 +14,7 @@ def list_withdrawals():
         "available_methods": get_available_methods(),
         "minimum_coins": current_app.config["MIN_WITHDRAWAL_COINS"],
         "fee_percent": current_app.config["WITHDRAWAL_FEE_PERCENT"],
+        "coin_value_bdt": current_app.config["COIN_REFERENCE_VALUE_BDT"],
     })
 
 

@@ -323,9 +323,26 @@
       </div>
     </div>
 
+    <!-- Coin conversion -->
+    <div class="conversion-card">
+      <div class="conversion-heading">
+        <span class="conversion-icon">৳</span>
+        <div>
+          <strong>Coin conversion</strong>
+          <span>Estimated value before the 5% fee</span>
+        </div>
+      </div>
+      <div class="conversion-rate"><span id="withdraw-rate">1,000</span> Coins = <strong>৳1</strong></div>
+      <div class="conversion-breakdown">
+        <div><span>Gross value</span><strong id="withdraw-gross">৳0</strong></div>
+        <div><span>Platform fee</span><strong id="withdraw-fee">৳0</strong></div>
+        <div><span>You receive</span><strong class="conversion-net" id="withdraw-net">৳0</strong></div>
+      </div>
+    </div>
+
     <!-- Amount input -->
     <div class="withdraw-input-wrap">
-      <input class="withdraw-input" type="number" id="withdraw-amount" placeholder="Enter amount" min="1000000" />
+      <input class="withdraw-input" type="number" id="withdraw-amount" placeholder="Enter amount" min="500000" inputmode="numeric" oninput="updateWithdrawalPreview()" />
       <span class="withdraw-currency">OX</span>
     </div>
 

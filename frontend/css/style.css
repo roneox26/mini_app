@@ -679,6 +679,39 @@ body {
 .copy-btn.copied { color: var(--green); border-color: var(--green); background: var(--green-dim); }
 
 /* ---- Withdrawal ---- */
+.conversion-card {
+  padding: 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, rgba(104,211,145,0.12), rgba(99,179,237,0.08));
+  border: 1px solid rgba(104,211,145,0.25);
+  border-radius: var(--radius-lg);
+}
+.conversion-heading { display: flex; align-items: center; gap: 10px; }
+.conversion-icon {
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--green-dim);
+  color: var(--green);
+  font-size: 18px;
+  font-weight: 800;
+}
+.conversion-heading strong, .conversion-heading span { display: block; }
+.conversion-heading strong { font-size: 13px; }
+.conversion-heading span { margin-top: 3px; color: var(--text-muted); font-size: 11px; }
+.conversion-rate { margin-top: 14px; color: var(--text-secondary); font-size: 12px; }
+.conversion-rate strong { color: var(--green); }
+.conversion-breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+.conversion-breakdown div { min-width: 0; }
+.conversion-breakdown span, .conversion-breakdown strong { display: block; }
+.conversion-breakdown span { color: var(--text-muted); font-size: 10px; }
+.conversion-breakdown strong { margin-top: 4px; font-size: 13px; }
+.conversion-net { color: var(--green); }
 .withdraw-input-wrap {
   position: relative;
   margin: 16px 0;

@@ -25,6 +25,7 @@ const state = {
   adCooldown: 0,
   adCooldownTimer: null,
   preloadedAdId: null,
+  withdrawal: { minimumCoins: 500000, feePercent: 5, coinValueBdt: 0.001 },
 };
 const taskTargets = {};
 
@@ -187,6 +188,7 @@ function showScreen(screenName) {
   if (screenName === 'tasks') loadTasks();
   if (screenName === 'leaderboard') loadLeaderboard();
   if (screenName === 'profile') loadProfile();
+  if (screenName === 'withdraw') loadWithdrawalInfo();
 }
 
 async function loadProfile() {
@@ -884,10 +886,39 @@ async function loadWithdrawalInfo() {
   const res = await apiCall('/withdrawals');
   if (!res.ok) return;
 
+  state.withdrawal = {
+    minimumCoins: res.data.minimum_coins || 500000,
+    feePercent: Number(res.data.fee_percent ?? 5),
+    coinValueBdt: Number(res.data.coin_value_bdt || 0.001),
+  };
   const availEl = document.getElementById('withdraw-available');
   const minEl = document.getElementById('withdraw-min');
   if (availEl && state.balance) availEl.textContent = formatCoinsExact(state.balance.available_coins);
   if (minEl) minEl.textContent = formatCoinsExact(res.data.minimum_coins);
+  const amountEl = document.getElementById('withdraw-amount');
+  if (amountEl) amountEl.min = state.withdrawal.minimumCoins;
+  const rateEl = document.getElementById('withdraw-rate');
+  if (rateEl) rateEl.textContent = formatCoinsExact(Math.round(1 / state.withdrawal.coinValueBdt));
+  updateWithdrawalPreview();
+}
+
+function formatBdt(amount) {
+  return `৳${amount.toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function updateWithdrawalPreview() {
+  const amount = parseInt(document.getElementById('withdraw-amount')?.value || '0', 10);
+  const gross = amount * state.withdrawal.coinValueBdt;
+  const fee = gross * state.withdrawal.feePercent / 100;
+  const fields = {
+    'withdraw-gross': formatBdt(gross),
+    'withdraw-fee': formatBdt(fee),
+    'withdraw-net': formatBdt(Math.max(0, gross - fee)),
+  };
+  Object.entries(fields).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+  });
 }
 
 async function submitWithdrawal() {
@@ -895,7 +926,11 @@ async function submitWithdrawal() {
   const method = document.querySelector('.method-btn.selected')?.dataset.method || '';
   const destination = document.getElementById('withdraw-destination')?.value || '';
 
-  if (!amount || !method || !destination) {
+  if (!amount || amount < state.withdrawal.minimumCoins || !method || !destination) {
+    if (amount && amount < state.withdrawal.minimumCoins) {
+      showToast(`Minimum withdrawal is ${formatCoinsExact(state.withdrawal.minimumCoins)} coins`, 'error');
+      return;
+    }
     showToast('Fill all fields', 'error');
     return;
   }
@@ -904,6 +939,7 @@ async function submitWithdrawal() {
   if (res.ok) {
     showToast('💸 Withdrawal requested!', 'success');
     document.getElementById('withdraw-amount').value = '';
+    updateWithdrawalPreview();
     loadWithdrawalInfo();
   } else {
     showToast(res.data.error || 'Withdrawal failed', 'error');
