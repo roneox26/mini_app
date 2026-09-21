@@ -10,7 +10,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 from app.config import get_config
-from app.database import init_db
+from app.database import init_db, db
 
 
 def rate_limit_key():
@@ -124,17 +124,11 @@ def create_app(config=None):
     @app.teardown_appcontext
     def shutdown_session(exception=None):
         """Ensure clean database session cleanup."""
-        if exception and hasattr(db, 'session'):
-            db.session.rollback()
-        db.session.remove()
-
-    @app.errorhandler(429)
-    def rate_limited(e):
-        return jsonify({"error": "Too many requests"}), 429
-
-    @app.errorhandler(500)
-    def internal_error(e):
-        app.logger.error(f"Internal error: {e}")
-        return jsonify({"error": "Internal server error"}), 500
+        try:
+            if exception and hasattr(db, 'session'):
+                db.session.rollback()
+            db.session.remove()
+        except Exception:
+            pass
 
     return app
