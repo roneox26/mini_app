@@ -87,19 +87,21 @@ class Config:
     # Total 7-day reward: 220,000 coins
     DAILY_REWARDS = {1: 5000, 2: 10000, 3: 15000, 4: 20000, 5: 30000, 6: 40000, 7: 100000}
 
-    # Boost Plans — initial launch prices
+    # Boost Plans — Mining rates per hour
     BOOST_PLANS = {
         "normal": {"rate": 1000,  "price_stars": 0,   "duration_days": 0},
-        "bronze": {"rate": 5000,  "price_stars": 79,  "duration_days": 7},
-        "silver": {"rate": 10000, "price_stars": 159, "duration_days": 7},
-        "gold":   {"rate": 20000, "price_stars": 299, "duration_days": 7},
+        "bronze": {"rate": 5000,  "price_stars": 50,  "duration_days": 7},
+        "silver": {"rate": 10000, "price_stars": 100, "duration_days": 7},
+        "gold":   {"rate": 20000, "price_stars": 200, "duration_days": 7},
     }
 
-    # Coin Purchase Packages
+    # Coin Purchase Packages (stars -> coins)
     COIN_PACKAGES = [
-        {"stars": 100,  "coins": 100000},
-        {"stars": 500,  "coins": 600000},
-        {"stars": 1000, "coins": 1300000},
+        {"stars": 50,   "coins": 50000},
+        {"stars": 100,  "coins": 120000},
+        {"stars": 200,  "coins": 300000},
+        {"stars": 500,  "coins": 850000},
+        {"stars": 1000, "coins": 2000000},
     ]
 
     # Feature Flags

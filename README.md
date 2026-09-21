@@ -118,10 +118,10 @@ python bot/bot.py set_webhook https://your-tunnel-url/webhook
 
 | Plan | Rate | Price | Duration |
 |------|------|-------|----------|
-| 🆓 Normal | 10/hr | Free | Forever |
-| 🥉 Bronze | 20/hr | 99 ⭐ | 7 days |
-| 🥈 Silver | 50/hr | 199 ⭐ | 7 days |
-| 🥇 Gold | 100/hr | 399 ⭐ | 7 days |
+| 🆓 Normal | 1,000/hr | Free | Forever |
+| 🥉 Bronze | 5,000/hr | 50 ⭐ | 7 days |
+| 🥈 Silver | 10,000/hr | 100 ⭐ | 7 days |
+| 🥇 Gold | 20,000/hr | 200 ⭐ | 7 days |
 
 **Mining Formula:**
 ```
