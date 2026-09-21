@@ -18,8 +18,17 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True,
         "pool_recycle": 300,
-        "pool_size": 10,
-        "max_overflow": 20,
+        "pool_size": 30,           # Increased from 10 for concurrent connections
+        "max_overflow": 50,        # Increased from 20 for burst traffic
+        "pool_timeout": 30,        # Wait up to 30s for available connection
+        "pool_echo": False,
+        "connect_args": {
+            "connect_timeout": 5,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        },
     }
 
     # Redis
@@ -49,7 +58,7 @@ class Config:
     ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 
     # Mining Economy — initial launch values (all configurable via admin panel)
-    DEFAULT_MINING_RATE = int(os.getenv("DEFAULT_MINING_RATE", "5000"))     # coins/hour (Normal plan)
+    DEFAULT_MINING_RATE = int(os.getenv("DEFAULT_MINING_RATE", "1000"))     # coins/hour (Normal plan)
     MINING_SESSION_HOURS = int(os.getenv("MINING_SESSION_HOURS", "8"))      # max session hours
 
     # Ad Rewards
@@ -81,10 +90,10 @@ class Config:
 
     # Boost Plans — initial launch prices
     BOOST_PLANS = {
-        "normal": {"rate": 5000,  "price_stars": 0,   "duration_days": 0},
-        "bronze": {"rate": 12000, "price_stars": 79,  "duration_days": 7},
-        "silver": {"rate": 30000, "price_stars": 159, "duration_days": 7},
-        "gold":   {"rate": 60000, "price_stars": 299, "duration_days": 7},
+        "normal": {"rate": 1000,  "price_stars": 0,   "duration_days": 0},
+        "bronze": {"rate": 5000,  "price_stars": 79,  "duration_days": 7},
+        "silver": {"rate": 10000, "price_stars": 159, "duration_days": 7},
+        "gold":   {"rate": 20000, "price_stars": 299, "duration_days": 7},
     }
 
     # Coin Purchase Packages
@@ -102,9 +111,20 @@ class Config:
     CRYPTO_WITHDRAWAL_ENABLED = os.getenv("CRYPTO_WITHDRAWAL_ENABLED", "false").lower() == "true"
     COIN_PURCHASE_ENABLED = os.getenv("COIN_PURCHASE_ENABLED", "true").lower() == "true"
 
-    # Rate Limiting
-    RATELIMIT_DEFAULT = "200 per day;50 per hour"
+    # Rate Limiting — More generous to handle high traffic
+    # Per-user rate limits (identified by token or IP)
+    RATELIMIT_DEFAULT = "10000 per day;1000 per hour;100 per minute"  # Changed from 200/50
     RATELIMIT_STORAGE_URI = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    
+    # Cache configuration
+    CACHE_TYPE = "redis"
+    CACHE_REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/1")
+    CACHE_DEFAULT_TIMEOUT = 300  # 5 minutes default
+    
+    # Session configuration for better resource management
+    PERMANENT_SESSION_LIFETIME = 86400  # 24 hours
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
 
 
 class DevelopmentConfig(Config):

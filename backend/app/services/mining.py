@@ -8,10 +8,10 @@ Formula: earned = elapsed_seconds * effective_rate_per_hour / 3600
 Max session: 8 hours = 28,800 seconds
 
 Rates (coins/hour):
-  Normal: 5,000  → 40,000 per session
-  Bronze: 12,000 → 96,000 per session
-  Silver: 30,000 → 240,000 per session
-  Gold:   60,000 → 480,000 per session
+  Normal: 1,000  → 8,000 per session
+  Bronze: 5,000  → 40,000 per session
+  Silver: 10,000 → 80,000 per session
+  Gold:   20,000 → 160,000 per session
 """
 from datetime import datetime, timezone
 from app.database import db

@@ -100,6 +100,35 @@ def create_app(config=None):
         return jsonify({"error": "Method not allowed"}), 405
 
     @app.errorhandler(429)
+    def rate_limit_exceeded(e):
+        """Handle rate limit errors gracefully."""
+        return jsonify({
+            "error": "Too many requests",
+            "message": "Please try again later. The system is handling many requests.",
+            "retry_after": 60
+        }), 429
+
+    @app.errorhandler(500)
+    def internal_error(e):
+        """Handle internal server errors."""
+        return jsonify({
+            "error": "Internal server error",
+            "message": "An unexpected error occurred. Please try again later."
+        }), 500
+
+    @app.before_request
+    def before_request():
+        """Optimize database connection handling."""
+        pass
+
+    @app.teardown_appcontext
+    def shutdown_session(exception=None):
+        """Ensure clean database session cleanup."""
+        if exception and hasattr(db, 'session'):
+            db.session.rollback()
+        db.session.remove()
+
+    @app.errorhandler(429)
     def rate_limited(e):
         return jsonify({"error": "Too many requests"}), 429
 

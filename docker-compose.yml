@@ -12,6 +12,7 @@ services:
       POSTGRES_USER: mininguser
       POSTGRES_PASSWORD: miningpassword
       POSTGRES_DB: miningdb
+      POSTGRES_INITDB_ARGS: "-c max_connections=200 -c shared_buffers=256MB -c effective_cache_size=1GB -c maintenance_work_mem=64MB"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -21,6 +22,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    # Performance tuning
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "work_mem=4MB"
+      - "-c"
+      - "maintenance_work_mem=64MB"
 
   # ─────────────────────────────────────────────
   # Redis
@@ -29,7 +43,7 @@ services:
     image: redis:7-alpine
     container_name: mining_redis
     restart: unless-stopped
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru --timeout 300 --tcp-keepalive 60
     ports:
       - "6379:6379"
     healthcheck:
@@ -49,6 +63,8 @@ services:
     environment:
       DATABASE_URL: postgresql://mininguser:miningpassword@postgres:5432/miningdb
       REDIS_URL: redis://redis:6379/0
+      FLASK_ENV: production
+      GUNICORN_WORKERS: 8
     ports:
       - "5000:5000"
     depends_on:
@@ -59,12 +75,25 @@ services:
     volumes:
       - ./backend:/app
     command: >
-      sh -c "alembic upgrade head && python seed.py && exec gunicorn --bind 0.0.0.0:5000 --workers 4 --threads 2 --timeout 120 wsgi:app"
-
-  # ─────────────────────────────────────────────
-  # Celery Worker (background tasks)
-  # ─────────────────────────────────────────────
-  worker:
+      sh -c "alembic upgrade head && python seed.py && exec gunicorn 
+      --config gunicorn_config.py 
+      --workers 8 
+      --worker-class sync 
+      --threads 2 
+      --worker-connections 1000 
+      --max-requests 1000 
+      --timeout 120 
+      --graceful-timeout 30 
+      --keep-alive 5 
+      wsgi:app"
+  CELERY_WORKER_CONCURRENCY: 4
+      CELERY_WORKER_PREFETCH_MULTIPLIER: 4
+      CELERY_WORKER_MAX_TASKS_PER_CHILD: 100
+    depends_on:
+      - backend
+    volumes:
+      - ./backend:/app
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4 --prefetch-multiplier=4 --max-tasks-per-child=100
     build: ./backend
     container_name: mining_worker
     restart: unless-stopped
