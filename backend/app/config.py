@@ -21,7 +21,6 @@ class Config:
         "pool_size": 30,           # Increased from 10 for concurrent connections
         "max_overflow": 50,        # Increased from 20 for burst traffic
         "pool_timeout": 30,        # Wait up to 30s for available connection
-        "pool_echo": False,
         "connect_args": {
             "connect_timeout": 5,
             "keepalives": 1,
